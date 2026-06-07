@@ -35,8 +35,22 @@ docker build -t tik-atar app/
 docker run -p 8080:80 tik-atar      # http://localhost:8080
 ```
 
-### ה. GitHub / GitLab Pages (אירוח ענן)
-דחיפה ל-remote + הפעלת Pages. אפשר להוסיף workflow אוטומטי לבנייה ופריסה — בקשו ואגדיר.
+### ה. GitHub Pages (אירוח ענן אוטומטי) — ✅ מוגדר
+ה-workflow מוכן ב-`.github/workflows/deploy.yml`: בכל `push` ל-`main` הוא בונה את `app/` ומפרסם אוטומטית.
+
+**שלבים חד-פעמיים (דורשים חשבון GitHub):**
+1. צרו ריפו ריק ב-GitHub (ציבורי — Pages חינמי דורש ריפו ציבורי).
+2. חברו את ה-remote ודחפו:
+   ```powershell
+   git -C C:\ITSiteProfolio remote add origin https://github.com/<user>/<repo>.git
+   git -C C:\ITSiteProfolio push -u origin main
+   ```
+3. ב-GitHub: **Settings → Pages → Source: GitHub Actions**.
+4. ה-Action ירוץ ויפרסם. הכתובת תהיה: `https://<user>.github.io/<repo>/`
+
+עדכונים עתידיים: כל `git push` ל-`main` בונה ומפרסם מחדש אוטומטית.
+
+> ⚠️ GitHub Pages חושף את האתר **לאינטרנט הציבורי**. האפליקציה עצמה אינה מכילה נתונים (כל הנתונים נשמרים בדפדפן של כל משתמש) — אך אם נדרש פנימי בלבד, העדיפו IIS/Docker.
 
 ## עדכון גרסה
 ערכו את המקור ב-`app/src` → `npm run build` → העתיקו את `app/dist` מחדש ליעד.
