@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="Layer_1"
+   data-name="Layer 1"
+   viewBox="0 0 320.25 94.88"
+   version="1.1"
+   sodipodi:docname="logo-gav-yam-02.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata
+     id="metadata19">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="705"
+     id="namedview17"
+     showgrid="false"
+     inkscape:zoom="0.91803279"
+     inkscape:cx="160.125"
+     inkscape:cy="47.439999"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <defs
+     id="defs4">
+    <style
+       id="style2">.cls-1{fill:#fff;}.cls-2{fill:#eec21b;}</style>
+  </defs>
+  <polygon
+     class="cls-1"
+     points="79.44 26.76 105.64 26.76 105.64 49.72 105.64 53.29 105.64 67.24 97.79 67.24 97.79 53.96 79.44 53.96 79.44 26.76"
+     id="polygon6"
+     style="fill:#104e7d;fill-opacity:1" />
+  <path
+     class="cls-1"
+     d="M8,53.94h55.6V67.51H8ZM0,94.6H71.52V26.88H0Z"
+     id="path8"
+     style="fill:#104e7d;fill-opacity:1" />
+  <polygon
+     class="cls-1"
+     points="249.01 26.55 249.01 53.59 275.43 53.59 283.88 53.59 293.05 67.13 275.43 67.13 249.01 67.13 249.01 94.88 275.43 94.88 275.43 75.22 281.87 75.22 288.64 94.88 320.25 94.88 275.43 26.55 249.01 26.55"
+     id="polygon10"
+     style="fill:#104e7d;fill-opacity:1" />
+  <path
+     class="cls-2"
+     d="M137.43,53.68a26.84,26.84,0,1,0-26.84-26.84,26.83,26.83,0,0,0,26.84,26.84"
+     id="path12" />
+  <polygon
+     class="cls-1"
+     points="170.01 26.55 170.01 53.59 222.52 53.59 222.52 67.13 170.01 67.13 170.01 94.6 240.98 94.6 240.98 67.13 230.47 67.13 230.47 53.59 230.47 49.63 230.47 26.55 170.01 26.55"
+     id="polygon14"
+     style="fill:#104e7d;fill-opacity:1" />
+</svg>

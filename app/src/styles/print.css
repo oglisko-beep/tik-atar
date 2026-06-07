@@ -1,0 +1,64 @@
+/* Screen: the print document is hidden. */
+@media screen {
+  .print-view { display: none; }
+}
+
+/* Print / Save-as-PDF: hide the app, render a clean branded A4 document. */
+@media print {
+  /* The app locks html/body/#root to 100% (viewport height) for the on-screen
+     shell. In print that clips the multi-page document to a single page — reset it. */
+  html, body, #root {
+    background: #fff !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .app-shell, .overlay, .toast, .site-pop, .menu-pop { display: none !important; }
+
+  .print-view { display: block; color: #111; font-family: Heebo, "Segoe UI", sans-serif; direction: rtl; }
+
+  @page { size: A4; margin: 15mm 13mm; }
+
+  .pv-cover { text-align: center; page-break-after: always; padding-top: 28mm; }
+  .pv-logo { height: 74px; width: auto; margin-bottom: 22mm; }
+  .pv-cover h1 { font-size: 30pt; color: #0B3A5E; margin: 0 0 6mm; font-weight: 800; }
+  .pv-sub { font-size: 17pt; color: #104E7D; margin-bottom: 18mm; }
+  .pv-meta { margin: 0 auto; border-collapse: collapse; width: 72%; }
+  .pv-meta th, .pv-meta td { border: 1px solid #b9c8d8; padding: 8px 13px; text-align: right; font-size: 11pt; }
+  .pv-meta th { background: #eaf2fa; width: 35%; font-weight: 700; color: #0B3A5E; }
+
+  .pv-section { margin-bottom: 7mm; }
+  .pv-section h2 {
+    font-size: 16pt; color: #0B3A5E; border-bottom: 2.5px solid #104E7D;
+    padding-bottom: 3px; margin: 7mm 0 3mm; page-break-after: avoid;
+  }
+  .pv-subhead { font-size: 12.5pt; color: #104E7D; font-weight: 700; margin: 4.5mm 0 2mm; page-break-after: avoid; }
+  .pv-note, .pv-inline-note { color: #555; font-size: 9.5pt; font-style: italic; margin: 0 0 2.5mm; }
+
+  .pv-bullets { columns: 2; column-gap: 12mm; font-size: 10pt; margin: 0 0 3mm; padding-inline-start: 18px; }
+  .pv-bullets li { margin-bottom: 1mm; break-inside: avoid; }
+
+  /* table-layout:fixed + wrapping stops a long unbreakable value (serial, key, URL)
+     from widening the table past the page and scaling the whole print down. */
+  .pv-kv, .pv-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.5pt; }
+  .pv-kv th, .pv-kv td, .pv-table th, .pv-table td {
+    border: 1px solid #bccad8; padding: 5px 8px; text-align: right; vertical-align: top;
+    overflow-wrap: anywhere; word-break: break-word;
+  }
+  .pv-kv th { background: #eaf2fa; width: 32%; font-weight: 600; color: #0B3A5E; }
+  .pv-table thead th { background: #104E7D !important; color: #fff !important; font-size: 9pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pv-table tr, .pv-kv tr { page-break-inside: avoid; }
+  .pv-empty { text-align: center; color: #999; font-style: italic; }
+
+  .pv-box { border: 1.4px dashed #9db2c6; padding: 11mm; text-align: center; color: #777; font-style: italic; margin-bottom: 4mm; }
+  .pv-callout { border: 1.5px solid #C0392B; background: #fbe7e4 !important; padding: 8px 13px; margin-bottom: 4mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pv-callout b { color: #C0392B; display: block; margin-bottom: 2px; }
+  .pv-callout ul { margin: 0; padding-inline-start: 18px; font-size: 10pt; }
+
+  .pv-footer-note { text-align: center; font-size: 8.5pt; color: #777; margin-top: 7mm; border-top: 1px solid #ddd; padding-top: 3mm; }
+
+  .pv-images { margin: 0 0 4mm; }
+  .pv-image { margin: 0 0 4mm; text-align: center; page-break-inside: avoid; }
+  .pv-image img { max-width: 100%; max-height: 150mm; border: 1px solid #ccc; }
+  .pv-image figcaption { font-size: 9pt; color: #666; font-style: italic; margin-top: 2px; }
+}

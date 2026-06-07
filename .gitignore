@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+app/dist/
+dist/
+
+# Local / editor / OS
+*.local
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude local settings (launch.json is kept; local settings are not)
+.claude/settings.local.json
