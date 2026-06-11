@@ -1,7 +1,10 @@
 import { PublicClientApplication, InteractionRequiredAuthError, type AccountInfo } from '@azure/msal-browser'
 import { remoteConfig, GRAPH_SCOPES } from './config'
 
-let msal: PublicClientApplication | null = null
+// Cache the initialization PROMISE (not just the instance) so concurrent callers
+// — e.g. React StrictMode double-invoking effects — all await the same fully
+// initialized MSAL, never a half-initialized one.
+let msalPromise: Promise<PublicClientApplication> | null = null
 
 /** Clear a stale "interaction in progress" flag left behind by an aborted
  *  redirect or a silent-iframe attempt. Without this, loginRedirect keeps
@@ -11,27 +14,30 @@ function clearStaleInteraction() {
   try { localStorage.removeItem('msal.interaction.status') } catch { /* ignore */ }
 }
 
-export async function getMsal(): Promise<PublicClientApplication> {
-  if (!msal) {
-    msal = new PublicClientApplication({
-      auth: {
-        clientId: remoteConfig.clientId,
-        authority: `https://login.microsoftonline.com/${remoteConfig.tenantId}`,
-        redirectUri: window.location.origin + '/',
-      },
-      cache: { cacheLocation: 'localStorage' },
-    })
-    await msal.initialize()
-    // Process a sign-in redirect return. Must not throw — a failure here should
-    // not block account detection, and the returned account becomes active.
-    try {
-      const res = await msal.handleRedirectPromise()
-      if (res?.account) msal.setActiveAccount(res.account)
-    } catch (e) {
-      console.error('[auth] handleRedirectPromise failed', e)
-    }
+export function getMsal(): Promise<PublicClientApplication> {
+  if (!msalPromise) {
+    msalPromise = (async () => {
+      const m = new PublicClientApplication({
+        auth: {
+          clientId: remoteConfig.clientId,
+          authority: `https://login.microsoftonline.com/${remoteConfig.tenantId}`,
+          redirectUri: window.location.origin + '/',
+        },
+        cache: { cacheLocation: 'localStorage' },
+      })
+      await m.initialize()
+      // Process a sign-in redirect return. Must not throw — a failure here should
+      // not block account detection, and the returned account becomes active.
+      try {
+        const res = await m.handleRedirectPromise()
+        if (res?.account) m.setActiveAccount(res.account)
+      } catch (e) {
+        console.error('[auth] handleRedirectPromise failed', e)
+      }
+      return m
+    })()
   }
-  return msal
+  return msalPromise
 }
 
 export async function currentAccount(): Promise<AccountInfo | null> {

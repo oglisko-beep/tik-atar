@@ -13,22 +13,20 @@ const STATUS: Record<RemoteStatus, { label: string; cls: string } | null> = {
   signedout: null,
 }
 
+// Single shared (SharePoint) system: no local/shared switch — just the live
+// connection status, a sign-in button when needed, and a manual refresh.
 export function ShareControls() {
-  const { mode, setMode, remoteStatus, signIn, refreshNow } = useStore()
+  const { remoteStatus, signIn, refreshNow } = useStore()
   if (!isRemoteConfigured()) return null
   const st = STATUS[remoteStatus]
-  const showRefresh = mode === 'shared' && ['synced', 'offline', 'conflict'].includes(remoteStatus)
+  const showRefresh = ['synced', 'offline', 'conflict', 'readonly'].includes(remoteStatus)
 
   return (
     <div className="share-controls">
-      <div className="seg" role="group" aria-label="מקור נתונים">
-        <button className={'seg-btn' + (mode === 'local' ? ' on' : '')} onClick={() => setMode('local')}>מקומי</button>
-        <button className={'seg-btn' + (mode === 'shared' ? ' on' : '')} onClick={() => setMode('shared')}>משותף</button>
-      </div>
-      {mode === 'shared' && remoteStatus === 'signedout' && (
+      {remoteStatus === 'signedout' && (
         <button className="btn btn-sm btn-primary" onClick={signIn}>התחבר</button>
       )}
-      {mode === 'shared' && st && (
+      {st && (
         <span className={'sync-chip ' + st.cls}>
           <span className="dot" />
           {st.label}

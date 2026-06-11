@@ -79,3 +79,19 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .main-pad[inert] textarea,
 .main-pad[inert] select,
 .main-pad[inert] button { cursor: not-allowed; }
+
+/* Sign-in gate shown in the main area until the user authenticates */
+.signin-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+.signin-gate svg { color: var(--c-primary); }
+.signin-gate h2 { margin: 0; font-size: 22px; font-weight: 800; color: var(--text); }
+.signin-gate p { margin: 0; max-width: 420px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.signin-gate .btn { margin-top: 6px; }

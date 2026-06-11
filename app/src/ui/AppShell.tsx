@@ -5,10 +5,11 @@ import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { CommandPalette } from './CommandPalette'
 import { SectionView } from '../engine/SectionView'
-import { IconEye } from './icons'
+import { IconEye, IconShieldAlert } from './icons'
 
 export function AppShell() {
-  const { readOnly } = useStore()
+  const { readOnly, remoteStatus, signIn } = useStore()
+  const needsSignIn = remoteStatus === 'signedout'
   const [active, setActive] = useState('docControl')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -75,9 +76,18 @@ export function AppShell() {
         </div>
       )}
       <main className="app-main" ref={mainRef}>
-        <div className="main-pad" ref={padRef}>
-          <SectionView section={section} />
-        </div>
+        {needsSignIn ? (
+          <div className="signin-gate">
+            <IconShieldAlert width={44} height={44} />
+            <h2>התחברות נדרשת</h2>
+            <p>התחבר עם חשבון הארגון כדי לטעון את נתוני התיק מ‑SharePoint.</p>
+            <button className="btn btn-primary" onClick={signIn}>התחבר</button>
+          </div>
+        ) : (
+          <div className="main-pad" ref={padRef}>
+            <SectionView section={section} />
+          </div>
+        )}
       </main>
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} onNavigate={navigate} />}
     </div>

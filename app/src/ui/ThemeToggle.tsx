@@ -17,7 +17,8 @@ export function ThemeToggle() {
 }
 
 export function SaveIndicator() {
-  const { saving } = useStore()
+  const { saving, mode } = useStore()
+  if (mode === 'shared') return null // the sync chip shows the real status in shared mode
   return (
     <span className={'save-indicator' + (saving ? ' saving' : '')} aria-live="polite">
       <span className="dot" />

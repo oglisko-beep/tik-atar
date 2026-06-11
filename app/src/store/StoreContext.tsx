@@ -5,6 +5,10 @@ import {
 import type { AppState, ImageItem, Row, SiteData } from '../types'
 import { loadState, saveState, debounce, loadMode, saveMode, loadSharedCache, saveSharedCache } from './storage'
 import { newSite, cloneSite } from './siteData'
+import { isRemoteConfigured } from '../remote/config'
+
+// When SharePoint is configured the app is a single shared system (no local mode).
+const SHARED_ONLY = isRemoteConfigured()
 
 export type Mode = 'local' | 'shared'
 export type RemoteStatus =
@@ -31,7 +35,7 @@ const now = () => new Date().toISOString()
 const defaultUi = () => ({ theme: 'light' as const, showExamples: true })
 
 function init(): AppState {
-  if (loadMode() === 'shared') {
+  if (SHARED_ONLY || loadMode() === 'shared') {
     const cache = loadSharedCache()
     return { sites: cache?.sites ?? {}, activeSiteId: cache?.activeSiteId ?? null, ui: loadState()?.ui ?? defaultUi() }
   }
@@ -126,7 +130,7 @@ const StoreCtx = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, init)
-  const [mode, setModeState] = useState<Mode>(() => loadMode())
+  const [mode, setModeState] = useState<Mode>(() => (SHARED_ONLY ? 'shared' : loadMode()))
   const [saving, setSaving] = useState(false)
   const [remoteStatus, setRemoteStatus] = useState<RemoteStatus>('off')
   const [readOnly, setReadOnly] = useState(false)
