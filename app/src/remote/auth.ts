@@ -39,23 +39,17 @@ export async function currentAccount(): Promise<AccountInfo | null> {
   return m.getActiveAccount() ?? m.getAllAccounts()[0] ?? null
 }
 
-/** Try silent SSO. Returns true if signed in, false if interaction is needed. */
+/** Returns true if a signed-in account is already cached (from a prior redirect
+ *  sign-in) — zero-click on return visits. We deliberately do NOT call ssoSilent:
+ *  its hidden iframe to login.microsoftonline.com is unreliable (third-party
+ *  cookies) and is blocked outright in restricted webviews, which left the UI
+ *  stuck on "loading" with no sign-in button. First-time users click "התחבר"
+ *  (a single redirect that reuses their existing Microsoft session = SSO). */
 export async function trySsoSilent(): Promise<boolean> {
   const m = await getMsal()
-  if (m.getAllAccounts().length) {
-    m.setActiveAccount(m.getActiveAccount() ?? m.getAllAccounts()[0])
-    return true
-  }
-  try {
-    const r = await m.ssoSilent({ scopes: GRAPH_SCOPES })
-    m.setActiveAccount(r.account)
-    return true
-  } catch {
-    // Silent SSO commonly fails (no login hint / third-party cookies blocked).
-    // Make sure it left no stale interaction flag so the explicit login works.
-    clearStaleInteraction()
-    return false
-  }
+  const acct = m.getActiveAccount() ?? m.getAllAccounts()[0]
+  if (acct) { m.setActiveAccount(acct); return true }
+  return false
 }
 
 export async function login(): Promise<void> {
