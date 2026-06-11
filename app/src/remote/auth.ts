@@ -3,6 +3,14 @@ import { remoteConfig, GRAPH_SCOPES } from './config'
 
 let msal: PublicClientApplication | null = null
 
+/** Clear a stale "interaction in progress" flag left behind by an aborted
+ *  redirect or a silent-iframe attempt. Without this, loginRedirect keeps
+ *  throwing `interaction_in_progress` and the sign-in button does nothing. */
+function clearStaleInteraction() {
+  try { sessionStorage.removeItem('msal.interaction.status') } catch { /* ignore */ }
+  try { localStorage.removeItem('msal.interaction.status') } catch { /* ignore */ }
+}
+
 export async function getMsal(): Promise<PublicClientApplication> {
   if (!msal) {
     msal = new PublicClientApplication({
@@ -14,7 +22,14 @@ export async function getMsal(): Promise<PublicClientApplication> {
       cache: { cacheLocation: 'localStorage' },
     })
     await msal.initialize()
-    await msal.handleRedirectPromise()
+    // Process a sign-in redirect return. Must not throw — a failure here should
+    // not block account detection, and the returned account becomes active.
+    try {
+      const res = await msal.handleRedirectPromise()
+      if (res?.account) msal.setActiveAccount(res.account)
+    } catch (e) {
+      console.error('[auth] handleRedirectPromise failed', e)
+    }
   }
   return msal
 }
@@ -28,7 +43,7 @@ export async function currentAccount(): Promise<AccountInfo | null> {
 export async function trySsoSilent(): Promise<boolean> {
   const m = await getMsal()
   if (m.getAllAccounts().length) {
-    m.setActiveAccount(m.getAllAccounts()[0])
+    m.setActiveAccount(m.getActiveAccount() ?? m.getAllAccounts()[0])
     return true
   }
   try {
@@ -36,13 +51,27 @@ export async function trySsoSilent(): Promise<boolean> {
     m.setActiveAccount(r.account)
     return true
   } catch {
+    // Silent SSO commonly fails (no login hint / third-party cookies blocked).
+    // Make sure it left no stale interaction flag so the explicit login works.
+    clearStaleInteraction()
     return false
   }
 }
 
 export async function login(): Promise<void> {
   const m = await getMsal()
-  await m.loginRedirect({ scopes: GRAPH_SCOPES })
+  try {
+    await m.loginRedirect({ scopes: GRAPH_SCOPES })
+  } catch (e: any) {
+    const code = e?.errorCode ?? ''
+    if (code === 'interaction_in_progress' || String(e?.message).includes('interaction_in_progress')) {
+      // Stale flag from an earlier aborted attempt — clear and retry once.
+      clearStaleInteraction()
+      await m.loginRedirect({ scopes: GRAPH_SCOPES })
+    } else {
+      throw e
+    }
+  }
 }
 
 export async function logout(): Promise<void> {

@@ -250,7 +250,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => { document.documentElement.dataset.theme = state.ui.theme }, [state.ui.theme])
 
   const setMode = (m: Mode) => setModeState(m)
-  const signIn = () => { void (async () => { const a = await import('../remote/auth'); await a.login() })() }
+  const signIn = () => {
+    void (async () => {
+      try {
+        setRemoteStatus('loading')
+        const a = await import('../remote/auth')
+        await a.login() // navigates away on success (redirect)
+      } catch (e) {
+        console.error('[shared] sign-in failed', e)
+        setRemoteStatus('signedout')
+      }
+    })()
+  }
   const refreshNow = () => { if (mode === 'shared') void reloadActive() }
 
   const value = useMemo(
