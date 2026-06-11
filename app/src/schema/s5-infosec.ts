@@ -72,8 +72,6 @@ export const s5: Section = {
         { id: 'first', label: 'גורם מטפל ראשון', type: 'text' },
         { id: 'contact', label: 'איש קשר אבטחת מידע + טלפון', type: 'text' },
         { id: 'external', label: 'ספק חיצוני (SOC / IR)', type: 'text' },
-        { id: 'procedure', label: 'נוהל דיווח', type: 'text' },
-        { id: 'offline', label: 'זמינות גיבוי לא-מקוון', type: 'text' },
         { id: 'mgmt', label: 'איש קשר הנהלה', type: 'text' },
       ],
     },
