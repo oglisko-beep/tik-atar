@@ -51,8 +51,6 @@ export const s5: Section = {
         { id: 'target', label: 'יעד גיבוי (מקומי/ענן/Offsite)', type: 'text' },
         { id: 'retention', label: 'שמירה (Retention)', type: 'text' },
         { id: 'lastTest', label: 'בדיקת שחזור אחרונה', type: 'text' },
-        { id: 'rto', label: 'יעד RTO', type: 'text' },
-        { id: 'rpo', label: 'יעד RPO', type: 'text' },
         { id: 'owner', label: 'אחראי', type: 'text' },
       ],
     },
