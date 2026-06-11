@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { doc } from '../schema'
+import { useActiveSite } from '../store/StoreContext'
+import { excludedOf, visibleSections } from '../store/inclusion'
+import type { SiteData } from '../types'
 import { IconSearch } from './icons'
 
 interface Entry {
@@ -10,11 +13,17 @@ interface Entry {
   kind: string
 }
 
-function buildIndex(): Entry[] {
+function buildIndex(site: SiteData | null): Entry[] {
+  const ex = excludedOf(site)
+  const visible = new Set(visibleSections(doc, ex).map((s) => s.id))
   const out: Entry[] = []
   for (const s of doc.sections) {
+    if (!visible.has(s.id)) continue
     out.push({ label: s.title, sectionId: s.id, sectionTitle: s.title, kind: 'פרק' })
+    let cut = false
     for (const b of s.blocks) {
+      if (b.kind === 'subhead') { cut = !!b.id && ex.subsections.has(b.id); if (cut) continue }
+      if (cut) continue
       if (b.kind === 'subhead') out.push({ label: b.text, sectionId: s.id, sectionTitle: s.title, kind: 'תת-פרק' })
       if (b.kind === 'kv') b.fields.forEach((f) => out.push({ label: f.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'שדה' }))
       if (b.kind === 'table') b.columns.forEach((c) => out.push({ label: c.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'טור' }))
@@ -34,7 +43,8 @@ export function CommandPalette({
   onClose: () => void
   onNavigate: (sectionId: string, blockId?: string) => void
 }) {
-  const index = useMemo(buildIndex, [])
+  const site = useActiveSite()
+  const index = useMemo(() => buildIndex(site), [site])
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
 
