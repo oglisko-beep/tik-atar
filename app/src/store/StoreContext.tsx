@@ -30,6 +30,9 @@ export type Action =
   | { type: 'IMPORT_STATE'; state: AppState }
   | { type: 'REPLACE_SITES'; sites: Record<string, SiteData>; activeSiteId: string | null }
   | { type: 'MERGE_SITE'; site: SiteData }
+  | { type: 'TOGGLE_SECTION'; sectionId: string }
+  | { type: 'TOGGLE_SUBSECTION'; subId: string }
+  | { type: 'SET_INCLUSION'; sections: string[]; subsections: string[] }
 
 const now = () => new Date().toISOString()
 const defaultUi = () => ({ theme: 'light' as const, showExamples: true })
@@ -53,7 +56,9 @@ function touchActive(state: AppState, mutate: (site: SiteData) => SiteData): App
   return { ...state, sites: { ...state.sites, [id]: updated } }
 }
 
-function reducer(state: AppState, action: Action): AppState {
+const toggleId = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id])
+
+export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_KV':
       return touchActive(state, (site) => {
@@ -110,6 +115,18 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, sites: action.sites, activeSiteId: action.activeSiteId }
     case 'MERGE_SITE':
       return { ...state, sites: { ...state.sites, [action.site.id]: action.site } }
+    case 'TOGGLE_SECTION':
+      return touchActive(state, (site) => {
+        const ex = site.excluded ?? { sections: [], subsections: [] }
+        return { ...site, excluded: { ...ex, sections: toggleId(ex.sections, action.sectionId) } }
+      })
+    case 'TOGGLE_SUBSECTION':
+      return touchActive(state, (site) => {
+        const ex = site.excluded ?? { sections: [], subsections: [] }
+        return { ...site, excluded: { ...ex, subsections: toggleId(ex.subsections, action.subId) } }
+      })
+    case 'SET_INCLUSION':
+      return touchActive(state, (site) => ({ ...site, excluded: { sections: action.sections, subsections: action.subsections } }))
     default:
       return state
   }
