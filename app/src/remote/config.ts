@@ -1,11 +1,18 @@
 // Configuration for the optional "shared (SharePoint)" mode.
-// Values come from Vite env vars (build-time). Empty clientId => feature hidden.
+// Values are baked at build time via Vite `define` (see vite.config.ts), sourced from
+// .env / CI env. clientId/tenantId are PUBLIC SPA identifiers — kept out of the repo,
+// injected from GitHub secrets at build. Empty clientId => the feature stays hidden.
+
+declare const __AAD_CLIENT_ID__: string
+declare const __AAD_TENANT_ID__: string
+declare const __SP_SITE__: string
+declare const __SP_LIBRARY__: string
 
 export const remoteConfig = {
-  clientId: (import.meta.env.VITE_AAD_CLIENT_ID as string) || '',
-  tenantId: (import.meta.env.VITE_AAD_TENANT_ID as string) || '',
-  siteUrl: (import.meta.env.VITE_SP_SITE as string) || 'gavyamcoil1.sharepoint.com:/sites/GavYamPortal/IT',
-  library: (import.meta.env.VITE_SP_LIBRARY as string) || 'TikAtarData',
+  clientId: typeof __AAD_CLIENT_ID__ !== 'undefined' ? __AAD_CLIENT_ID__ : '',
+  tenantId: typeof __AAD_TENANT_ID__ !== 'undefined' ? __AAD_TENANT_ID__ : '',
+  siteUrl: (typeof __SP_SITE__ !== 'undefined' && __SP_SITE__) || 'gavyamcoil1.sharepoint.com:/sites/GavYamPortal/IT',
+  library: (typeof __SP_LIBRARY__ !== 'undefined' && __SP_LIBRARY__) || 'TikAtarData',
 }
 
 export const isRemoteConfigured = () => !!(remoteConfig.clientId && remoteConfig.tenantId)
