@@ -1,4 +1,6 @@
 import type { Block, BlockValue, ChecklistValues, Doc, KvValues, Row, Section } from '../types'
+import type { Excluded } from './inclusion'
+import { visibleBlocks, visibleSections } from './inclusion'
 
 export interface Completion {
   total: number
@@ -33,8 +35,9 @@ function unit(b: Block, v: BlockValue | undefined): Completion {
   return { total: 0, filled: 0 }
 }
 
-export function sectionCompletion(sec: Section, values: Record<string, BlockValue>): Completion {
-  return sec.blocks.reduce<Completion>(
+export function sectionCompletion(sec: Section, values: Record<string, BlockValue>, ex?: Excluded): Completion {
+  const blocks = ex ? visibleBlocks(sec, ex) : sec.blocks
+  return blocks.reduce<Completion>(
     (acc, b) => {
       const id = 'id' in b ? b.id : undefined
       const u = unit(b, id ? values[id] : undefined)
@@ -44,10 +47,11 @@ export function sectionCompletion(sec: Section, values: Record<string, BlockValu
   )
 }
 
-export function overallCompletion(doc: Doc, values: Record<string, BlockValue>): Completion {
-  return doc.sections.reduce<Completion>(
+export function overallCompletion(doc: Doc, values: Record<string, BlockValue>, ex?: Excluded): Completion {
+  const sections = ex ? visibleSections(doc, ex) : doc.sections
+  return sections.reduce<Completion>(
     (acc, sec) => {
-      const c = sectionCompletion(sec, values)
+      const c = sectionCompletion(sec, values, ex)
       return { total: acc.total + c.total, filled: acc.filled + c.filled }
     },
     { total: 0, filled: 0 },
