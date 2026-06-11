@@ -1,6 +1,7 @@
 import type { Section } from '../types'
 import { useActiveSite, useStore } from '../store/StoreContext'
 import { sectionCompletion, pct } from '../store/completion'
+import { excludedOf, visibleBlocks } from '../store/inclusion'
 import { CompletionRing } from '../ui/CompletionRing'
 import { BlockRenderer } from './BlockRenderer'
 import { IconClipboard } from '../ui/icons'
@@ -11,7 +12,8 @@ export function SectionView({ section }: { section: Section }) {
   const values = site?.values || {}
   const showExamples = state.ui.showExamples
   const num = section.title.match(/^(\d+)\./)?.[1]
-  const completion = pct(sectionCompletion(section, values))
+  const ex = excludedOf(site)
+  const completion = pct(sectionCompletion(section, values, ex))
 
   return (
     <div className="section-enter" key={section.id + (site?.id ?? '')}>
@@ -24,7 +26,7 @@ export function SectionView({ section }: { section: Section }) {
         <CompletionRing value={completion} size={52} stroke={5} showText />
       </div>
 
-      {section.blocks.map((block, i) => (
+      {visibleBlocks(section, ex).map((block, i) => (
         <BlockRenderer key={i} block={block} values={values} dispatch={dispatch} showExamples={showExamples} />
       ))}
     </div>
