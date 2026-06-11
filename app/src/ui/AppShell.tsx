@@ -1,25 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
 import { doc } from '../schema'
-import { useStore } from '../store/StoreContext'
+import { useStore, useActiveSite } from '../store/StoreContext'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { CommandPalette } from './CommandPalette'
 import { SectionView } from '../engine/SectionView'
+import { excludedOf, visibleSections } from '../store/inclusion'
+import { ChapterManager } from './ChapterManager'
 import { IconEye, IconShieldAlert } from './icons'
 
 export function AppShell() {
   const { readOnly, remoteStatus, signIn } = useStore()
   const needsSignIn = remoteStatus === 'signedout'
+  const site = useActiveSite()
   const [active, setActive] = useState('docControl')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [chaptersOpen, setChaptersOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
   const padRef = useRef<HTMLDivElement>(null)
-  const section = doc.sections.find((s) => s.id === active) ?? doc.sections[0]
+  const ex = excludedOf(site)
+  const visible = visibleSections(doc, ex)
+  const section = visible.find((s) => s.id === active) ?? visible[0]
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
   }, [active])
+
+  // If the active section gets hidden, move to the first visible one.
+  useEffect(() => {
+    if (visible.length && !visible.some((s) => s.id === active)) setActive(visible[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, visible.map((s) => s.id).join(',')])
 
   // Lock editing for view-only users without blocking scroll: inert the content
   // (the fields), not the scroll container (main).
@@ -67,6 +79,7 @@ export function AppShell() {
           setActive(id)
           setSidebarOpen(false)
         }}
+        onManage={() => setChaptersOpen(true)}
       />
       <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       {readOnly && (
@@ -83,13 +96,21 @@ export function AppShell() {
             <p>התחבר עם חשבון הארגון כדי לטעון את נתוני התיק מ‑SharePoint.</p>
             <button className="btn btn-primary" onClick={signIn}>התחבר</button>
           </div>
+        ) : visible.length === 0 ? (
+          <div className="signin-gate">
+            <IconEye width={44} height={44} />
+            <h2>כל הפרקים הוסתרו</h2>
+            <p>פתח את "תכולת התיק" כדי לכלול פרקים באתר זה.</p>
+            <button className="btn btn-primary" onClick={() => setChaptersOpen(true)}>תכולת התיק</button>
+          </div>
         ) : (
           <div className="main-pad" ref={padRef}>
-            <SectionView section={section} />
+            <SectionView section={section!} />
           </div>
         )}
       </main>
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} onNavigate={navigate} />}
+      {chaptersOpen && <ChapterManager onClose={() => setChaptersOpen(false)} />}
     </div>
   )
 }
