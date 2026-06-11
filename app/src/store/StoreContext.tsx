@@ -117,6 +117,7 @@ interface StoreValue {
   saving: boolean
   mode: Mode
   remoteStatus: RemoteStatus
+  readOnly: boolean
   setMode: (m: Mode) => void
   signIn: () => void
   refreshNow: () => void
@@ -128,9 +129,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<Mode>(() => loadMode())
   const [saving, setSaving] = useState(false)
   const [remoteStatus, setRemoteStatus] = useState<RemoteStatus>('off')
+  const [readOnly, setReadOnly] = useState(false)
 
   const stateRef = useRef(state); stateRef.current = state
   const statusRef = useRef(remoteStatus); statusRef.current = remoteStatus
+  const readOnlyRef = useRef(readOnly); readOnlyRef.current = readOnly
   const eTags = useRef<Record<string, string>>({})
   const editing = useRef(false)
   const justLoaded = useRef(false)
@@ -149,7 +152,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setRemoteStatus('synced')
     } catch (e: any) {
       const m = String(e?.message)
-      if (m === 'forbidden') setRemoteStatus('readonly')
+      if (m === 'forbidden') { setReadOnly(true); setRemoteStatus('readonly'); void revertActiveFromServer() }
       else if (m === 'etag-conflict') { setRemoteStatus('conflict'); void reloadActive() }
       else if (m === 'redirecting' || m === 'no-account') setRemoteStatus('signedout')
       else setRemoteStatus('offline')
@@ -174,7 +177,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       eTags.current = tags
       justLoaded.current = true
       dispatch({ type: 'REPLACE_SITES', sites, activeSiteId: Object.keys(sites)[0] ?? null })
-      setRemoteStatus('synced')
+      setRemoteStatus(readOnlyRef.current ? 'readonly' : 'synced')
     } catch {
       setRemoteStatus('offline')
     }
@@ -193,10 +196,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         justLoaded.current = true
         dispatch({ type: 'MERGE_SITE', site: fresh })
       }
-      setRemoteStatus('synced')
+      setRemoteStatus(readOnlyRef.current ? 'readonly' : 'synced')
     } catch {
       setRemoteStatus('offline')
     }
+  }
+
+  // Forcefully replace the active site with the server copy, discarding a local
+  // edit that was just rejected (read-only user). Ignores the eTag short-circuit.
+  async function revertActiveFromServer() {
+    const st = stateRef.current
+    const site = st.activeSiteId ? st.sites[st.activeSiteId] : null
+    if (!site) return
+    try {
+      const sp = await import('../remote/sharepointStore')
+      const file = sp.fileNameFor(site)
+      const { site: fresh, eTag } = await sp.loadRemoteSite(file)
+      if (fresh) {
+        eTags.current[file] = eTag
+        justLoaded.current = true
+        dispatch({ type: 'MERGE_SITE', site: fresh })
+      }
+    } catch { /* keep local copy if the reload fails */ }
   }
 
   // ---- persistence: local (v1) in local mode; cache (shared/v1) in shared mode ----
@@ -221,6 +242,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // ---- mode change: load the right source ----
   const firstMode = useRef(true)
   useEffect(() => {
+    setReadOnly(false) // re-evaluate edit rights for the new source
     if (mode === 'shared') {
       void loadAllRemote()
     } else {
@@ -265,8 +287,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const refreshNow = () => { if (mode === 'shared') void reloadActive() }
 
   const value = useMemo(
-    () => ({ state, dispatch, saving, mode, remoteStatus, setMode, signIn, refreshNow }),
-    [state, saving, mode, remoteStatus],
+    () => ({ state, dispatch, saving, mode, remoteStatus, readOnly, setMode, signIn, refreshNow }),
+    [state, saving, mode, remoteStatus, readOnly],
   )
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
 }
