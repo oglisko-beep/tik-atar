@@ -3,8 +3,12 @@ import {
   type Dispatch, type ReactNode,
 } from 'react'
 import type { AppState, ImageItem, Row, SiteData } from '../types'
-import { loadState, saveState, debounce } from './storage'
+import { loadState, saveState, debounce, loadMode, saveMode, loadSharedCache, saveSharedCache } from './storage'
 import { newSite, cloneSite } from './siteData'
+
+export type Mode = 'local' | 'shared'
+export type RemoteStatus =
+  | 'off' | 'signedout' | 'loading' | 'synced' | 'saving' | 'readonly' | 'offline' | 'conflict'
 
 export type Action =
   | { type: 'SET_KV'; blockId: string; fieldId: string; value: string }
@@ -20,14 +24,21 @@ export type Action =
   | { type: 'SET_THEME'; theme: 'light' | 'dark' }
   | { type: 'TOGGLE_EXAMPLES' }
   | { type: 'IMPORT_STATE'; state: AppState }
+  | { type: 'REPLACE_SITES'; sites: Record<string, SiteData>; activeSiteId: string | null }
+  | { type: 'MERGE_SITE'; site: SiteData }
 
 const now = () => new Date().toISOString()
+const defaultUi = () => ({ theme: 'light' as const, showExamples: true })
 
 function init(): AppState {
+  if (loadMode() === 'shared') {
+    const cache = loadSharedCache()
+    return { sites: cache?.sites ?? {}, activeSiteId: cache?.activeSiteId ?? null, ui: loadState()?.ui ?? defaultUi() }
+  }
   const loaded = loadState()
   if (loaded && Object.keys(loaded.sites).length) return loaded
   const s = newSite('אתר חדש')
-  return { sites: { [s.id]: s }, activeSiteId: s.id, ui: { theme: 'light', showExamples: true } }
+  return { sites: { [s.id]: s }, activeSiteId: s.id, ui: defaultUi() }
 }
 
 /** Apply a mutation to the active site and bump its updatedAt. */
@@ -46,10 +57,7 @@ function reducer(state: AppState, action: Action): AppState {
         return { ...site, values: { ...site.values, [action.blockId]: { ...cur, [action.fieldId]: action.value } } }
       })
     case 'SET_TABLE':
-      return touchActive(state, (site) => ({
-        ...site,
-        values: { ...site.values, [action.blockId]: action.rows },
-      }))
+      return touchActive(state, (site) => ({ ...site, values: { ...site.values, [action.blockId]: action.rows } }))
     case 'SET_CHECKLIST':
       return touchActive(state, (site) => {
         const cur = (site.values[action.blockId] as Record<string, Record<string, string>>) || {}
@@ -57,10 +65,7 @@ function reducer(state: AppState, action: Action): AppState {
         return { ...site, values: { ...site.values, [action.blockId]: { ...cur, [action.rowId]: row } } }
       })
     case 'SET_IMAGES':
-      return touchActive(state, (site) => ({
-        ...site,
-        values: { ...site.values, [action.blockId]: action.images },
-      }))
+      return touchActive(state, (site) => ({ ...site, values: { ...site.values, [action.blockId]: action.images } }))
     case 'SET_META':
       return touchActive(state, (site) => ({ ...site, meta: { ...site.meta, ...action.patch } }))
     case 'NEW_SITE': {
@@ -87,10 +92,7 @@ function reducer(state: AppState, action: Action): AppState {
     case 'RENAME_SITE': {
       const site = state.sites[action.id]
       if (!site) return state
-      return {
-        ...state,
-        sites: { ...state.sites, [action.id]: { ...site, meta: { ...site.meta, name: action.name }, updatedAt: now() } },
-      }
+      return { ...state, sites: { ...state.sites, [action.id]: { ...site, meta: { ...site.meta, name: action.name }, updatedAt: now() } } }
     }
     case 'SELECT_SITE':
       return state.sites[action.id] ? { ...state, activeSiteId: action.id } : state
@@ -100,6 +102,10 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, ui: { ...state.ui, showExamples: !state.ui.showExamples } }
     case 'IMPORT_STATE':
       return action.state
+    case 'REPLACE_SITES':
+      return { ...state, sites: action.sites, activeSiteId: action.activeSiteId }
+    case 'MERGE_SITE':
+      return { ...state, sites: { ...state.sites, [action.site.id]: action.site } }
     default:
       return state
   }
@@ -109,29 +115,148 @@ interface StoreValue {
   state: AppState
   dispatch: Dispatch<Action>
   saving: boolean
+  mode: Mode
+  remoteStatus: RemoteStatus
+  setMode: (m: Mode) => void
+  signIn: () => void
+  refreshNow: () => void
 }
 const StoreCtx = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, init)
+  const [mode, setModeState] = useState<Mode>(() => loadMode())
   const [saving, setSaving] = useState(false)
-  const first = useRef(true)
-  const save = useRef(debounce((s: AppState) => { saveState(s); setSaving(false) }, 600)).current
+  const [remoteStatus, setRemoteStatus] = useState<RemoteStatus>('off')
 
-  useEffect(() => {
-    if (first.current) {
-      first.current = false
-      return
+  const stateRef = useRef(state); stateRef.current = state
+  const statusRef = useRef(remoteStatus); statusRef.current = remoteStatus
+  const eTags = useRef<Record<string, string>>({})
+  const editing = useRef(false)
+  const justLoaded = useRef(false)
+
+  const saveLocal = useRef(debounce((s: AppState) => { saveState(s); setSaving(false) }, 600)).current
+  const saveCache = useRef(debounce((s: AppState) => saveSharedCache({ sites: s.sites, activeSiteId: s.activeSiteId }), 600)).current
+  const remoteSave = useRef(debounce((s: SiteData) => { void doRemoteSave(s) }, 1500)).current
+
+  // ---- remote operations (modules lazy-loaded so MSAL stays out of the main bundle) ----
+  async function doRemoteSave(site: SiteData) {
+    try {
+      setRemoteStatus('saving')
+      const sp = await import('../remote/sharepointStore')
+      const { eTag } = await sp.saveRemoteSite(site, eTags.current[sp.fileNameFor(site)] || '')
+      eTags.current[sp.fileNameFor(site)] = eTag
+      setRemoteStatus('synced')
+    } catch (e: any) {
+      const m = String(e?.message)
+      if (m === 'forbidden') setRemoteStatus('readonly')
+      else if (m === 'etag-conflict') { setRemoteStatus('conflict'); void reloadActive() }
+      else if (m === 'redirecting' || m === 'no-account') setRemoteStatus('signedout')
+      else setRemoteStatus('offline')
+    } finally {
+      editing.current = false
     }
-    setSaving(true)
-    save(state)
-  }, [state, save])
+  }
 
+  async function loadAllRemote() {
+    setRemoteStatus('loading')
+    try {
+      const auth = await import('../remote/auth')
+      if (!(await auth.trySsoSilent())) { setRemoteStatus('signedout'); return }
+      const sp = await import('../remote/sharepointStore')
+      const files = await sp.listRemoteSites()
+      const sites: Record<string, SiteData> = {}
+      const tags: Record<string, string> = {}
+      for (const fm of files) {
+        const { site, eTag } = await sp.loadRemoteSite(fm.name)
+        if (site) { sites[site.id] = site; tags[fm.name] = eTag }
+      }
+      eTags.current = tags
+      justLoaded.current = true
+      dispatch({ type: 'REPLACE_SITES', sites, activeSiteId: Object.keys(sites)[0] ?? null })
+      setRemoteStatus('synced')
+    } catch {
+      setRemoteStatus('offline')
+    }
+  }
+
+  async function reloadActive() {
+    const st = stateRef.current
+    const site = st.activeSiteId ? st.sites[st.activeSiteId] : null
+    if (!site) return
+    try {
+      const sp = await import('../remote/sharepointStore')
+      const file = sp.fileNameFor(site)
+      const { site: fresh, eTag } = await sp.loadRemoteSite(file)
+      if (fresh && eTag !== eTags.current[file]) {
+        eTags.current[file] = eTag
+        justLoaded.current = true
+        dispatch({ type: 'MERGE_SITE', site: fresh })
+      }
+      setRemoteStatus('synced')
+    } catch {
+      setRemoteStatus('offline')
+    }
+  }
+
+  // ---- persistence: local (v1) in local mode; cache (shared/v1) in shared mode ----
+  const firstSave = useRef(true)
   useEffect(() => {
-    document.documentElement.dataset.theme = state.ui.theme
-  }, [state.ui.theme])
+    saveMode(mode)
+    if (firstSave.current) { firstSave.current = false; return }
+    if (mode === 'local') { setSaving(true); saveLocal(state) }
+    else saveCache(state)
+  }, [state, mode, saveLocal, saveCache])
 
-  const value = useMemo(() => ({ state, dispatch, saving }), [state, saving])
+  // ---- remote autosave trigger (only on genuine edits in shared mode) ----
+  const firstRemote = useRef(true)
+  useEffect(() => {
+    if (mode !== 'shared') return
+    if (firstRemote.current) { firstRemote.current = false; return }
+    if (justLoaded.current) { justLoaded.current = false; return }
+    const site = state.activeSiteId ? state.sites[state.activeSiteId] : null
+    if (site) { editing.current = true; remoteSave(site) }
+  }, [state.sites, state.activeSiteId, mode, remoteSave])
+
+  // ---- mode change: load the right source ----
+  const firstMode = useRef(true)
+  useEffect(() => {
+    if (mode === 'shared') {
+      void loadAllRemote()
+    } else {
+      setRemoteStatus('off')
+      if (!firstMode.current) {
+        const loaded = loadState()
+        if (loaded && Object.keys(loaded.sites).length) {
+          justLoaded.current = true
+          dispatch({ type: 'REPLACE_SITES', sites: loaded.sites, activeSiteId: loaded.activeSiteId })
+        }
+      }
+    }
+    firstMode.current = false
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  // ---- poll (shared) ----
+  useEffect(() => {
+    if (mode !== 'shared') return
+    const id = setInterval(() => {
+      if (!editing.current && statusRef.current !== 'signedout') void reloadActive()
+    }, 45000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  useEffect(() => { document.documentElement.dataset.theme = state.ui.theme }, [state.ui.theme])
+
+  const setMode = (m: Mode) => setModeState(m)
+  const signIn = () => { void (async () => { const a = await import('../remote/auth'); await a.login() })() }
+  const refreshNow = () => { if (mode === 'shared') void reloadActive() }
+
+  const value = useMemo(
+    () => ({ state, dispatch, saving, mode, remoteStatus, setMode, signIn, refreshNow }),
+    [state, saving, mode, remoteStatus],
+  )
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
 }
 
@@ -140,12 +265,10 @@ export function useStore(): StoreValue {
   if (!ctx) throw new Error('useStore must be used within StoreProvider')
   return ctx
 }
-
 export function useActiveSite(): SiteData | null {
   const { state } = useStore()
   return state.activeSiteId ? state.sites[state.activeSiteId] ?? null : null
 }
-
 export function useBlockValue(blockId: string) {
   const site = useActiveSite()
   return site?.values[blockId]
