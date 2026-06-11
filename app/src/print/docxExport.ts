@@ -5,6 +5,7 @@ import {
 } from 'docx'
 import type { Block, ChecklistValues, ImageItem, KvValues, Row, SiteData } from '../types'
 import { doc as schema } from '../schema'
+import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
 
 interface ProcessedImage { data: Uint8Array; type: 'png' | 'jpg'; width: number; height: number }
 type ImageMap = Record<string, ProcessedImage[]>
@@ -244,11 +245,12 @@ export function buildDocxDocument(site: SiteData, logo: Uint8Array | null, image
     kvTable(coverMeta),
   ]
 
+  const ex = excludedOf(site)
   const body: (Paragraph | Table)[] = []
-  for (const section of schema.sections) {
+  for (const section of visibleSections(schema, ex)) {
     body.push(h1(section.title))
     if (section.note) body.push(note(section.note))
-    for (const block of section.blocks) body.push(...blockToDocx(block, site.values, imageMap))
+    for (const block of visibleBlocks(section, ex)) body.push(...blockToDocx(block, site.values, imageMap))
   }
 
   const docxDoc = new Document({
