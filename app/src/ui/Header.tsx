@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext'
 import { SiteSwitcher } from './SiteSwitcher'
 import { ThemeToggle, SaveIndicator } from './ThemeToggle'
 import { Menu } from './Menu'
+import { ShareControls } from './ShareControls'
 import { IconMenu, IconSearch, IconEye } from './icons'
 
 export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
@@ -50,6 +51,7 @@ export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
 
       <ThemeToggle />
       <Menu />
+      <ShareControls />
       <div className="header-divider" />
       <SaveIndicator />
     </header>

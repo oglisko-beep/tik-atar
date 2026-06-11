@@ -40,3 +40,16 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .image-drop svg { color: var(--c-primary-soft); }
 .image-drop-title { font-weight: 600; font-size: 14px; color: var(--text-2); }
 .image-drop:disabled { opacity: .6; cursor: default; }
+
+/* Shared-mode controls (header) */
+.share-controls { display: flex; align-items: center; gap: 8px; }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.seg-btn { border: none; background: transparent; color: var(--muted); font: 600 12.5px Heebo, sans-serif; padding: 4px 12px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+.seg-btn.on { background: var(--surface); color: var(--c-primary); box-shadow: var(--shadow-sm); }
+.sync-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.sync-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.sync-chip.ok { color: var(--ok); background: var(--ok-bg); }
+.sync-chip.warn { color: var(--warn); background: var(--warn-bg); }
+.sync-chip.bad { color: var(--bad); background: var(--bad-bg); }
+.sync-chip.muted { color: var(--muted); background: var(--surface-2); }
+@media (max-width: 900px) { .share-controls .seg-btn { padding: 4px 9px; } }
