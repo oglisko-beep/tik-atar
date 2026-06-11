@@ -21,7 +21,7 @@ export interface Column {
 export type Row = Record<string, string> // includes optional _id
 
 export type Block =
-  | { kind: 'subhead'; text: string; optional?: boolean }
+  | { kind: 'subhead'; text: string; optional?: boolean; id?: string }
   | { kind: 'note'; text: string }
   | { kind: 'bullets'; title?: string; items: string[] }
   | { kind: 'kv'; id: string; fields: Field[]; optional?: boolean }
@@ -65,6 +65,7 @@ export interface SiteData {
   updatedAt: string
   meta: SiteMeta
   values: Record<string, BlockValue>
+  excluded?: { sections: string[]; subsections: string[] }
 }
 
 export interface AppState {
