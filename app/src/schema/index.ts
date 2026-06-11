@@ -15,6 +15,18 @@ export const doc: Doc = {
   sections: [docControl, siteDetails, s1, s2, s3, s4, s5, s6, s7, s8, s9],
 }
 
+// Give every sub-heading a stable id (section id + its ordinal among subheads)
+// so sub-chapters can be individually included/excluded per site.
+for (const section of doc.sections) {
+  let ordinal = 0
+  for (const block of section.blocks) {
+    if (block.kind === 'subhead') {
+      if (!block.id) block.id = `${section.id}#${ordinal}`
+      ordinal++
+    }
+  }
+}
+
 /** Convenience: map of every data-block id -> its block, for quick lookups. */
 export function dataBlocks() {
   return doc.sections.flatMap((s) => s.blocks).filter((b): b is Extract<typeof b, { id: string }> => 'id' in b)
