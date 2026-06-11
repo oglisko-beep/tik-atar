@@ -1,5 +1,6 @@
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
+import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 
 function PrintBlock({ block, values }: { block: Block; values: Record<string, BlockValue> }) {
@@ -124,6 +125,7 @@ export function PrintView() {
   const site = useActiveSite()
   if (!site) return null
   const v = site.values
+  const ex = excludedOf(site)
   const details = (v['site-details'] as KvValues) || {}
   const today = new Date().toLocaleDateString('he-IL')
 
@@ -159,11 +161,11 @@ export function PrintView() {
         </table>
       </div>
 
-      {doc.sections.map((s) => (
+      {visibleSections(doc, ex).map((s) => (
         <section className="pv-section" key={s.id}>
           <h2>{s.title}</h2>
           {s.note && <p className="pv-note">{s.note}</p>}
-          {s.blocks.map((b, i) => (
+          {visibleBlocks(s, ex).map((b, i) => (
             <PrintBlock key={i} block={b} values={v} />
           ))}
         </section>
