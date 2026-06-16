@@ -62,3 +62,24 @@
   .pv-image img { max-width: 100%; max-height: 150mm; border: 1px solid #ccc; }
   .pv-image figcaption { font-size: 9pt; color: #666; font-style: italic; margin-top: 2px; }
 }
+
+/* Dashboard mode: print the dashboard itself (not the per-site document). */
+@media print {
+  html[data-view="dashboard"] .app-shell { display: block !important; height: auto !important; }
+  html[data-view="dashboard"] .app-header,
+  html[data-view="dashboard"] .app-sidebar,
+  html[data-view="dashboard"] .sidebar-backdrop,
+  html[data-view="dashboard"] .readonly-banner,
+  html[data-view="dashboard"] .print-view { display: none !important; }
+  html[data-view="dashboard"] .app-main { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+  html[data-view="dashboard"] .dash { max-width: none; }
+  html[data-view="dashboard"] .dash-card, html[data-view="dashboard"] .dash-att-row { cursor: default; }
+  html[data-view="dashboard"] .dash-kpi, html[data-view="dashboard"] .dash-tile,
+  html[data-view="dashboard"] .dash-card, html[data-view="dashboard"] .dash-att-row,
+  html[data-view="dashboard"] .dash-cell, html[data-view="dashboard"] .dash-matrix-wrap,
+  html[data-view="dashboard"] .dash-matrix thead th {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  html[data-view="dashboard"] .dash-kpis, html[data-view="dashboard"] .dash-inv,
+  html[data-view="dashboard"] .dash-cards, html[data-view="dashboard"] .dash-block { break-inside: avoid; }
+}
