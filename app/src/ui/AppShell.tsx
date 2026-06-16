@@ -7,16 +7,18 @@ import { CommandPalette } from './CommandPalette'
 import { SectionView } from '../engine/SectionView'
 import { excludedOf, visibleSections } from '../store/inclusion'
 import { ChapterManager } from './ChapterManager'
+import { DashboardView } from './DashboardView'
 import { IconEye, IconShieldAlert } from './icons'
 
 export function AppShell() {
-  const { readOnly, remoteStatus, signIn } = useStore()
+  const { readOnly, remoteStatus, signIn, dispatch } = useStore()
   const needsSignIn = remoteStatus === 'signedout'
   const site = useActiveSite()
   const [active, setActive] = useState('docControl')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [chaptersOpen, setChaptersOpen] = useState(false)
+  const [dashboardMode, setDashboardMode] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
   const padRef = useRef<HTMLDivElement>(null)
   const ex = excludedOf(site)
@@ -41,6 +43,10 @@ export function AppShell() {
     if (readOnly) el.setAttribute('inert', '')
     else el.removeAttribute('inert')
   }, [readOnly])
+
+  useEffect(() => {
+    document.documentElement.dataset.view = dashboardMode ? 'dashboard' : 'site'
+  }, [dashboardMode])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -72,17 +78,23 @@ export function AppShell() {
 
   return (
     <div className="app-shell" data-sidebar={sidebarOpen ? 'open' : undefined}>
-      <Header onMenu={() => setSidebarOpen((o) => !o)} onSearch={() => setPaletteOpen(true)} />
+      <Header
+        onMenu={() => setSidebarOpen((o) => !o)}
+        onSearch={() => setPaletteOpen(true)}
+        dashboardActive={dashboardMode}
+        onToggleDashboard={() => setDashboardMode((m) => !m)}
+      />
       <Sidebar
         active={active}
         onSelect={(id) => {
           setActive(id)
           setSidebarOpen(false)
+          setDashboardMode(false)
         }}
         onManage={() => setChaptersOpen(true)}
       />
       <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
-      {readOnly && (
+      {readOnly && !dashboardMode && (
         <div className="readonly-banner" role="status">
           <IconEye width={16} height={16} />
           <span>מצב צפייה בלבד — אין לך הרשאת עריכה לאתר זה. שינויים לא יישמרו.</span>
@@ -95,6 +107,10 @@ export function AppShell() {
             <h2>התחברות נדרשת</h2>
             <p>התחבר עם חשבון הארגון כדי לטעון את נתוני התיק מ‑SharePoint.</p>
             <button className="btn btn-primary" onClick={signIn}>התחבר</button>
+          </div>
+        ) : dashboardMode ? (
+          <div className="main-pad">
+            <DashboardView onOpenSite={(id) => { dispatch({ type: 'SELECT_SITE', id }); setDashboardMode(false) }} />
           </div>
         ) : visible.length === 0 ? (
           <div className="signin-gate">

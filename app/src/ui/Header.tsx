@@ -4,9 +4,19 @@ import { SiteSwitcher } from './SiteSwitcher'
 import { ThemeToggle, SaveIndicator } from './ThemeToggle'
 import { Menu } from './Menu'
 import { ShareControls } from './ShareControls'
-import { IconMenu, IconSearch, IconEye } from './icons'
+import { IconMenu, IconSearch, IconEye, IconDashboard } from './icons'
 
-export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
+export function Header({
+  onMenu,
+  onSearch,
+  dashboardActive,
+  onToggleDashboard,
+}: {
+  onMenu: () => void
+  onSearch: () => void
+  dashboardActive?: boolean
+  onToggleDashboard?: () => void
+}) {
   const { state, dispatch } = useStore()
   const [logoOk, setLogoOk] = useState(true)
   const showEx = state.ui.showExamples
@@ -39,6 +49,16 @@ export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
       </button>
 
       <SiteSwitcher />
+
+      <button
+        className={'icon-btn' + (dashboardActive ? ' on' : '')}
+        title="דשבורד מנהלים"
+        aria-label="דשבורד מנהלים"
+        aria-pressed={dashboardActive}
+        onClick={() => onToggleDashboard?.()}
+      >
+        <IconDashboard />
+      </button>
 
       <button
         className={'icon-btn' + (showEx ? ' on' : '')}
