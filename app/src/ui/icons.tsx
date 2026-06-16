@@ -38,3 +38,5 @@ export const IconEye = (p: P) => (<svg {...base(p)}><path d="M2 12s3.5-7 10-7 10
 export const IconNetwork = (p: P) => (<svg {...base(p)}><rect x="9" y="2" width="6" height="6" rx="1" /><rect x="2" y="16" width="6" height="6" rx="1" /><rect x="16" y="16" width="6" height="6" rx="1" /><path d="M12 8v4M12 12H5v4M12 12h7v4" /></svg>)
 export const IconRefresh = (p: P) => (<svg {...base(p)}><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>)
 export const IconSliders = (p: P) => (<svg {...base(p)}><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>)
+export const IconMinus = (p: P) => (<svg {...base(p)}><path d="M5 12h14" /></svg>)
+export const IconDashboard = (p: P) => (<svg {...base(p)}><rect x="3" y="3" width="7" height="8" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="15" width="7" height="6" rx="1" /></svg>)
