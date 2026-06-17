@@ -19,7 +19,7 @@ export const siteDetails: Section = {
         { id: 'itOwner', label: 'אחראי IT באתר', type: 'text' },
         { id: 'phone', label: 'טלפון / נייד', type: 'text' },
         { id: 'email', label: 'דוא"ל', type: 'email' },
-        { id: 'support', label: 'ספק תמיכה ראשי', type: 'text' },
+        { id: 'support', label: 'מנהל אחזקה', type: 'text' },
         { id: 'since', label: 'תאריך איכלוס / הקמה', type: 'date' },
       ],
     },
