@@ -6,6 +6,7 @@ import {
 import type { Block, ChecklistValues, ImageItem, KvValues, Row, SiteData } from '../types'
 import { doc as schema } from '../schema'
 import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
+import { isImageItem } from '../engine/imageUtils'
 
 interface ProcessedImage { data: Uint8Array; type: 'png' | 'jpg'; width: number; height: number }
 type ImageMap = Record<string, ProcessedImage[]>
@@ -40,6 +41,7 @@ async function processImages(site: SiteData): Promise<ImageMap> {
     const items = (site.values[id] as ImageItem[]) || []
     const out: ProcessedImage[] = []
     for (const it of items) {
+      if (!isImageItem(it)) continue
       const bytes = dataUrlToBytes(it.dataUrl)
       if (!bytes) continue
       const { w, h } = await imgDims(it.dataUrl)
@@ -148,14 +150,15 @@ function placeholderBox(lines: string[]) {
 function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: ImageMap): (Paragraph | Table)[] {
   switch (block.kind) {
     case 'image': {
-      const imgs = imageMap[block.id] || []
       const out: (Paragraph | Table)[] = []
-      for (const im of imgs) {
+      for (const im of imageMap[block.id] || []) {
         out.push(new Paragraph({
           alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 },
           children: [new ImageRun({ type: im.type, data: im.data, transformation: { width: im.width, height: im.height } })],
         }))
       }
+      const items = (values[block.id] as ImageItem[]) || []
+      for (const it of items) if (!isImageItem(it)) out.push(note(`תרשים מצורף (Visio): ${it.name}`))
       return out
     }
     case 'subhead':

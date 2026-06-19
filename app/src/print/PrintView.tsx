@@ -1,6 +1,7 @@
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
 import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
+import { isImageItem } from '../engine/imageUtils'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 
 function PrintBlock({ block, values }: { block: Block; values: Record<string, BlockValue> }) {
@@ -103,16 +104,20 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
       )
     }
     case 'image': {
-      const imgs = (values[block.id] as ImageItem[]) || []
-      if (!imgs.length) return null
+      const items = (values[block.id] as ImageItem[]) || []
+      if (!items.length) return null
       return (
         <div className="pv-images">
-          {imgs.map((im) => (
-            <figure className="pv-image" key={im.id}>
-              <img src={im.dataUrl} alt={im.name} />
-              <figcaption>{im.name}</figcaption>
-            </figure>
-          ))}
+          {items.map((im) =>
+            isImageItem(im) ? (
+              <figure className="pv-image" key={im.id}>
+                <img src={im.dataUrl} alt={im.name} />
+                <figcaption>{im.name}</figcaption>
+              </figure>
+            ) : (
+              <p className="pv-attach" key={im.id}>תרשים מצורף (Visio): {im.name}</p>
+            ),
+          )}
         </div>
       )
     }
