@@ -91,7 +91,7 @@ export const s3: Section = {
       ],
     },
     { kind: 'subhead', text: '3.7 תרשים רשת' },
-    { kind: 'image', id: 's3-diagram', hint: 'העלאת תרשים רשת עדכני (אינטרנט ← חומת אש ← מתגים ← שרתים / VLANs)' },
+    { kind: 'image', id: 's3-diagram', multi: true, hint: 'תרשים רשת — PNG/JPG להצגה ו/או Visio (.vsdx) לעריכה' },
     { kind: 'subhead', text: '3.8 רשת אלחוטית (Wi-Fi)' },
     {
       kind: 'bullets',
