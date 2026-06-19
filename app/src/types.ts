@@ -56,6 +56,7 @@ export interface ImageItem {
   id: string
   name: string
   dataUrl: string
+  type?: string
 }
 export type BlockValue = KvValues | Row[] | ChecklistValues | ImageItem[]
 
