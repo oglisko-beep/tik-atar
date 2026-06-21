@@ -6,5 +6,5 @@ import type { ImageItem } from '../types'
  *  filename not ending in a Visio extension. */
 export function isImageItem(it: ImageItem): boolean {
   if (it.type) return it.type.startsWith('image/')
-  return !/\.vsd[xm]?$/i.test(it.name)
+  return !/\.(vsd[xm]?|pdf)$/i.test(it.name)
 }

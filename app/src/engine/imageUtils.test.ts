@@ -15,4 +15,8 @@ describe('isImageItem', () => {
     expect(isImageItem({ id: '1', name: 'net.vsd', dataUrl: '' })).toBe(false)
     expect(isImageItem({ id: '1', name: 'net.vsdm', dataUrl: '' })).toBe(false)
   })
+  it('treats PDF as a non-image attachment', () => {
+    expect(isImageItem({ id: '1', name: 'doc.pdf', dataUrl: '' })).toBe(false)
+    expect(isImageItem({ id: '1', name: 'doc.PDF', dataUrl: '', type: 'application/pdf' })).toBe(false)
+  })
 })

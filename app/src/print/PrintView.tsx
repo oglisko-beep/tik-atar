@@ -115,7 +115,7 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
                 <figcaption>{im.name}</figcaption>
               </figure>
             ) : (
-              <p className="pv-attach" key={im.id}>תרשים מצורף (Visio): {im.name}</p>
+              <p className="pv-attach" key={im.id}>קובץ מצורף: {im.name}</p>
             ),
           )}
         </div>

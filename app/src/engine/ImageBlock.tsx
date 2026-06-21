@@ -111,11 +111,11 @@ export function ImageBlock({
         <span className="image-drop-title">
           {busy ? 'טוען…' : block.hint || (block.multi ? 'העלאת תמונות (תרשימים / צילומים)' : 'העלאת תמונה / תרשים')}
         </span>
-        <span className="muted" style={{ fontSize: 12 }}>לחצו לבחירת קובץ · PNG / JPG / Visio · עד 10MB</span>
+        <span className="muted" style={{ fontSize: 12 }}>לחצו לבחירת קובץ · PNG / JPG / PDF / Visio · עד 10MB</span>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,.vsdx,.vsd,.vsdm"
+          accept="image/*,.pdf,.vsdx,.vsd,.vsdm"
           multiple={block.multi}
           hidden
           onChange={(e) => {

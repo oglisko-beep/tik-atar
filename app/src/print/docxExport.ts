@@ -158,7 +158,7 @@ function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: Im
         }))
       }
       const items = (values[block.id] as ImageItem[]) || []
-      for (const it of items) if (!isImageItem(it)) out.push(note(`תרשים מצורף (Visio): ${it.name}`))
+      for (const it of items) if (!isImageItem(it)) out.push(note(`קובץ מצורף: ${it.name}`))
       return out
     }
     case 'subhead':
