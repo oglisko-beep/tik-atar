@@ -8,7 +8,8 @@ import { SectionView } from '../engine/SectionView'
 import { excludedOf, visibleSections } from '../store/inclusion'
 import { ChapterManager } from './ChapterManager'
 import { DashboardView } from './DashboardView'
-import { IconEye, IconShieldAlert } from './icons'
+import { IconEye } from './icons'
+import { LoginScreen } from './LoginScreen'
 
 export function AppShell() {
   const { readOnly, remoteStatus, signIn, dispatch } = useStore()
@@ -76,6 +77,8 @@ export function AppShell() {
     }
   }
 
+  if (needsSignIn) return <LoginScreen onSignIn={signIn} />
+
   return (
     <div className="app-shell" data-sidebar={sidebarOpen ? 'open' : undefined}>
       <Header
@@ -101,14 +104,7 @@ export function AppShell() {
         </div>
       )}
       <main className="app-main" ref={mainRef}>
-        {needsSignIn ? (
-          <div className="signin-gate">
-            <IconShieldAlert width={44} height={44} />
-            <h2>התחברות נדרשת</h2>
-            <p>התחבר עם חשבון הארגון כדי לטעון את נתוני התיק מ‑SharePoint.</p>
-            <button className="btn btn-primary" onClick={signIn}>התחבר</button>
-          </div>
-        ) : dashboardMode ? (
+        {dashboardMode ? (
           <div className="main-pad">
             <DashboardView onOpenSite={(id) => { dispatch({ type: 'SELECT_SITE', id }); setDashboardMode(false) }} />
           </div>

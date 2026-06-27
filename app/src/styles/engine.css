@@ -100,6 +100,16 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .signin-gate p { margin: 0; max-width: 420px; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .signin-gate .btn { margin-top: 6px; }
 
+/* Login screen (full-screen, shown until the user signs in) */
+.login-screen { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--surface-2); }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-sm); padding: 38px 40px; width: 100%; max-width: 420px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.login-logo { height: 60px; width: auto; margin-bottom: 16px; }
+.login-logo-fallback { font-size: 30px; font-weight: 800; color: var(--c-primary); margin-bottom: 16px; }
+.login-title { font-size: 22px; font-weight: 800; color: var(--c-primary); margin: 0; }
+.login-sub { font-size: 14px; color: var(--muted); margin: 6px 0 24px; }
+.login-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: var(--c-primary); color: #fff; border: none; border-radius: 10px; padding: 13px 20px; font: 700 15px Heebo, sans-serif; cursor: pointer; transition: background .15s; }
+.login-btn:hover { background: #0b3a5e; }
+
 /* Chapter inclusion manager */
 .cm { width: min(560px, 92vw); max-height: 80vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
 .cm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
