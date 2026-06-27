@@ -76,7 +76,7 @@ export async function login(): Promise<void> {
 
 export async function logout(): Promise<void> {
   const m = await getMsal()
-  await m.logoutRedirect()
+  await m.logoutRedirect({ postLogoutRedirectUri: window.location.origin + '/' })
 }
 
 export async function getToken(): Promise<string> {

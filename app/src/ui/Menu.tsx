@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useActiveSite, useStore } from '../store/StoreContext'
+import { isRemoteConfigured } from '../remote/config'
 import { useClickOutside } from './useClickOutside'
 import { exportSite, exportAll, parseImport, download, safeFileName } from '../store/exportImport'
-import { IconLayers, IconDownload, IconUpload, IconPrinter, IconFileText } from './icons'
+import { IconLayers, IconDownload, IconUpload, IconPrinter, IconFileText, IconLogout } from './icons'
 
 export function Menu() {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, signOut } = useStore()
   const site = useActiveSite()
   const [open, setOpen] = useState(false)
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false))
@@ -89,6 +90,14 @@ export function Menu() {
           >
             <IconFileText /> ייצוא ל-Word (.docx)
           </button>
+          {isRemoteConfigured() && (
+            <>
+              <div className="menu-sep" />
+              <button className="menu-item" onClick={() => { setOpen(false); signOut() }}>
+                <IconLogout /> התנתק / החלף משתמש
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

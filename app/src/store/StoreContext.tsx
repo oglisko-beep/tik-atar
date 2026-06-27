@@ -141,6 +141,7 @@ interface StoreValue {
   readOnly: boolean
   setMode: (m: Mode) => void
   signIn: () => void
+  signOut: () => void
   refreshNow: () => void
 }
 const StoreCtx = createContext<StoreValue | null>(null)
@@ -305,10 +306,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
     })()
   }
+  const signOut = () => {
+    void (async () => {
+      try {
+        const a = await import('../remote/auth')
+        await a.logout() // redirects to Microsoft sign-out, then back to the login screen
+      } catch (e) {
+        console.error('[shared] sign-out failed', e)
+      }
+    })()
+  }
   const refreshNow = () => { if (mode === 'shared') void reloadActive() }
 
   const value = useMemo(
-    () => ({ state, dispatch, saving, mode, remoteStatus, readOnly, setMode, signIn, refreshNow }),
+    () => ({ state, dispatch, saving, mode, remoteStatus, readOnly, setMode, signIn, signOut, refreshNow }),
     [state, saving, mode, remoteStatus, readOnly],
   )
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
