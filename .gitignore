@@ -16,3 +16,6 @@ desktop.ini
 
 # Claude local settings (launch.json is kept; local settings are not)
 .claude/settings.local.json
+
+# Private infrastructure secrets — NEVER commit (org IDs stay out of the public repo)
+INFRA-SECRETS.local.md
