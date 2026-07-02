@@ -19,7 +19,7 @@ describe('schema', () => {
 
   it('control checklists have the right number of rows', () => {
     const cl = blocks.filter((b): b is Extract<Block, { kind: 'checklist' }> => b.kind === 'checklist')
-    expect(cl.find((b) => b.id === 's5-controls')!.rows.length).toBe(14)
+    expect(cl.find((b) => b.id === 's5-controls')!.rows.length).toBe(17)
     expect(cl.find((b) => b.id === 's6-controls')!.rows.length).toBe(12)
   })
 
