@@ -330,4 +330,11 @@ select.status-native:focus { outline: none; box-shadow: 0 0 0 3px var(--ring); }
   .main-pad { padding: 18px 16px 70px; }
 }
 
+/* Narrow phones: give the header cluster breathing room */
+@media (max-width: 560px) {
+  .app-header { gap: 8px; padding: 10px 12px; }
+  .site-switch { padding: 0 9px; }
+  .site-switch .site-name { max-width: 110px; }
+}
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
