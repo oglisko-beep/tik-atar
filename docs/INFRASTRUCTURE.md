@@ -20,6 +20,18 @@
 | נתונים | SharePoint — ספריית `TikAtarData` |
 | CI/CD | GitHub Actions (פריסה אוטומטית) |
 
+### דיאגרמת ארכיטקטורה
+
+```mermaid
+flowchart TB
+  GH["GitHub · oglisko-beep/tik-atar"] -->|push to main| ACT["GitHub Actions — build + deploy"]
+  ACT -->|upload dist| SWA["Azure Static Web Apps<br/>tik-atar · rg-tik-atar"]
+  DNS["tikatar.gav-yam.co.il"] -. CNAME .-> SWA
+  SWA -->|HTTPS| USER["דפדפן המשתמש<br/>React SPA — רץ כאן"]
+  USER -->|SSO · MSAL| ENTRA["Microsoft Entra ID"]
+  USER -->|Microsoft Graph| SP["SharePoint · TikAtarData<br/>JSON לכל אתר"]
+```
+
 ---
 
 ## 2. אירוח — Azure Static Web Apps
@@ -124,3 +136,47 @@ Node 20+. `app/.env` הוא **gitignored** — לעולם לא נכנס ל‑git
 - **מזהי הארגון (clientId, tenantId) לעולם לא נשמרים בריפו הציבורי.** הם ב‑`app/.env` (מקומי) וב‑GitHub secrets בלבד; מוזרקים בזמן build דרך Vite `define`.
 - הנתונים נשארים בתוך ה‑SharePoint הארגוני — לא אצל צד שלישי.
 - אין לשמור סיסמאות/מפתחות בתוך תוכן התיק (יש התראה על כך בנספחים).
+
+---
+
+## 10. נהלי תקלות ושחזור (Incident & Recovery)
+
+### טריאז' מהיר — תסמין ← סיבה ← פעולה
+
+| תסמין | סיבה סבירה | פעולה |
+|-------|-----------|-------|
+| האתר לא נטען / "404 Web Site not found" | פריסה נכשלה, או DNS/דומיין | GitHub → Actions (לוג הריצה); ודא שהדומיין `Ready` ב‑SWA; Ctrl+Shift+R |
+| התחברות נכשלת · `AADSTS50011` | Redirect URI לא רשום לכתובת שבשימוש | Entra → App registration → Authentication → הוסף את הכתובת (`origin + /`) |
+| לחיצה על "התחבר" לא עושה כלום | דגל `interaction_in_progress` תקוע | חלון פרטי / ניקוי אחסון דפדפן (האפליקציה גם מתאוששת אוטומטית) |
+| חזר מ‑Microsoft אך לא מחובר | הסכמת מנהל / scope חסר | ודא admin consent ל‑`Sites.ReadWrite.All` (Entra → API permissions) |
+| נתונים לא נשמרים · "צפייה בלבד" לא צפוי | 403 — אין הרשאת כתיבה בספרייה | תקן הרשאות `TikAtarData` (עורך/קבוצה = Edit) |
+| נתונים נמחקו / שוכתבו | טעות עריכה / conflict | שחזר מ‑Version History של הקובץ ב‑SharePoint, או ייבא גיבוי JSON |
+| דומיין/SSL לא עובד | CNAME לא התפשט / אימות | `nslookup tikatar.gav-yam.co.il 8.8.8.8`; ודא רשומה ב‑NetVision; דומיין `Ready` ב‑SWA |
+
+### פריסה נכשלה / פריסה מחדש
+1. GitHub → **Actions** → פתח את הריצה האחרונה של *Azure Static Web Apps CI/CD*.
+2. אם נכשלה — קרא את הלוג (בד"כ שלב ה‑build). תקן ו‑`git push`, או **Re‑run jobs**.
+3. הריפו הוא מקור האמת — כל `push` ל‑main בונה ופורס מחדש (~1–2 דק').
+
+### טוקן פריסה אבד / הוחלף
+Azure Portal → SWA `tik-atar` → **Manage deployment token** → *Reset* → העתק → עדכן את ה‑secret `AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_GROUND_0F57E4E03` ב‑GitHub → הרץ Action מחדש.
+
+### שחזור נתונים (SharePoint)
+- **קובץ בודד:** ספריית `TikAtarData` → הקובץ → **Version History** → שחזר גרסה. אם נמחק — **סל מיחזור**.
+- **גיבוי יזום:** באפליקציה, תפריט ⋯ → **ייצוא כל האתרים (JSON)** — שמור עותק תקופתי. שחזור: ⋯ → **ייבוא מקובץ JSON**.
+
+### שחזור מלא (Disaster Recovery)
+הנתונים (SharePoint) וההתחברות (Entra) **בלתי‑תלויים באירוח** — גם אם ה‑SWA נמחק, הנתונים בטוחים. לשחזור מלא:
+1. שחזר את הסודות מהכספת (`INFRA-SECRETS.local.md`).
+2. אם ה‑SWA נמחק — צור/שחזר SWA, עדכן את ה‑secret של טוקן הפריסה, ופרוס מ‑GitHub.
+3. עדכן CNAME / redirect URIs אם הכתובת השתנתה.
+4. הרץ את ה‑Action → האתר חוזר לאוויר; הנתונים כבר ב‑SharePoint.
+
+### אנשי קשר / הסלמה
+| נושא | גורם |
+|------|------|
+| DNS ציבורי (gav-yam.co.il) | תמיכת **NetVision** |
+| DNS פנימי | צוות IT — שרת `TOHA-1` |
+| Azure (SWA, מנוי) | מנהל Azure בארגון |
+| Entra (app, consent, הרשאות) | מנהל Entra / Global Admin |
+| SharePoint (הרשאות ספרייה) | מנהל האתר `GavYamPortal/IT` |
