@@ -18,6 +18,7 @@ export interface SiteSummary {
   classification: string
   completion: number
   updatedAt: string
+  updatedBy?: string
   staleDays: number
   criticalGaps: string[]
 }
@@ -86,6 +87,7 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
       classification: site.meta.classification || '',
       completion,
       updatedAt: site.updatedAt,
+      updatedBy: site.meta.updatedBy,
       staleDays,
       criticalGaps,
     }

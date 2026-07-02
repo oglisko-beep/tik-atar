@@ -26,6 +26,7 @@ export function KvBlock({
               placeholder={f.placeholder}
               options={f.options}
               ariaLabel={f.label}
+              required={f.required}
               onChange={(val) => onChange(f.id, val)}
             />
           </div>

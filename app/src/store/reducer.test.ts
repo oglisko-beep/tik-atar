@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { reducer } from './StoreContext'
+import { reducer, setEditorName } from './StoreContext'
 import { newSite } from './siteData'
 import type { AppState } from '../types'
 
@@ -22,5 +22,19 @@ describe('inclusion reducer actions', () => {
   it('SET_INCLUSION replaces both arrays', () => {
     const st = reducer(baseState(), { type: 'SET_INCLUSION', sections: ['s1'], subsections: ['s1#0'] })
     expect(st.sites.site1.excluded).toEqual({ sections: ['s1'], subsections: ['s1#0'] })
+  })
+})
+
+describe('updatedBy stamping', () => {
+  it('stamps meta.updatedBy from the current editor on edit', () => {
+    setEditorName('דנה כהן')
+    const st = reducer(baseState(), { type: 'SET_KV', blockId: 'site-details', fieldId: 'name', value: 'מטה' })
+    expect(st.sites.site1.meta.updatedBy).toBe('דנה כהן')
+    setEditorName('')
+  })
+  it('does not stamp when no editor is set', () => {
+    setEditorName('')
+    const st = reducer(baseState(), { type: 'SET_KV', blockId: 'site-details', fieldId: 'name', value: 'מטה' })
+    expect(st.sites.site1.meta.updatedBy).toBeUndefined()
   })
 })

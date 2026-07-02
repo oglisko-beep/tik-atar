@@ -33,7 +33,10 @@ export function SiteSwitcher() {
               }}
             >
               <IconBuilding />
-              <span className="grow">{s.meta.name}</span>
+              <span className="grow">
+                {s.meta.name}
+                {s.meta.updatedBy && <span className="site-opt-by"> · ע"י {s.meta.updatedBy}</span>}
+              </span>
               {s.id === site?.id && <IconCheck width={15} height={15} />}
             </button>
           ))}

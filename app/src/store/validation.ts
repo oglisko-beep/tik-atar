@@ -28,3 +28,8 @@ export function validate(type: FieldType, v: string): ValidationResult {
   }
   return { valid: true }
 }
+
+/** Required-field check (non-blocking, visual only). True when required but blank. */
+export function requiredEmpty(required: boolean | undefined, v: string): boolean {
+  return !!required && !v.trim()
+}

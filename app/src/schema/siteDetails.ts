@@ -9,8 +9,8 @@ export const siteDetails: Section = {
       kind: 'kv',
       id: 'site-details',
       fields: [
-        { id: 'name', label: 'שם האתר', type: 'text' },
-        { id: 'code', label: 'קוד אתר', type: 'text', placeholder: 'GY-TLV-01' },
+        { id: 'name', label: 'שם האתר', type: 'text', required: true },
+        { id: 'code', label: 'קוד אתר', type: 'text', placeholder: 'GY-TLV-01', required: true },
         { id: 'address', label: 'כתובת מלאה', type: 'text' },
         { id: 'building', label: 'בניין / קומות', type: 'text' },
         { id: 'stations', label: 'מספר עמדות עבודה', type: 'text' },

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validate } from './validation'
+import { validate, requiredEmpty } from './validation'
 
 describe('validate', () => {
   it('accepts valid and empty IPs, rejects bad ones', () => {
@@ -22,5 +22,15 @@ describe('validate', () => {
   })
   it('text is always valid', () => {
     expect(validate('text', 'anything').valid).toBe(true)
+  })
+})
+
+describe('requiredEmpty', () => {
+  it('is true only when required and blank', () => {
+    expect(requiredEmpty(true, '')).toBe(true)
+    expect(requiredEmpty(true, '   ')).toBe(true)
+    expect(requiredEmpty(true, 'x')).toBe(false)
+    expect(requiredEmpty(false, '')).toBe(false)
+    expect(requiredEmpty(undefined, '')).toBe(false)
   })
 })

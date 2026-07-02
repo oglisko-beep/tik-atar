@@ -47,7 +47,7 @@ export function DashboardView({ onOpenSite }: { onOpenSite: (id: string) => void
                 <div className="dash-card-nm">{s.name}</div>
                 <div className="dash-card-meta">
                   {s.classification && <span className="dash-badge">{s.classification}</span>}
-                  <span>עודכן {relativeUpdated(s.updatedAt, Date.now())}</span>
+                  <span>עודכן {relativeUpdated(s.updatedAt, Date.now())}{s.updatedBy ? ` · ע"י ${s.updatedBy}` : ''}</span>
                 </div>
                 {s.criticalGaps.length > 0 && (
                   <div className="dash-gaps"><IconShieldAlert width={13} height={13} /> {s.criticalGaps.length} פערים קריטיים</div>

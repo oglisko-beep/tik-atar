@@ -10,6 +10,10 @@ import { isRemoteConfigured } from '../remote/config'
 // When SharePoint is configured the app is a single shared system (no local mode).
 const SHARED_ONLY = isRemoteConfigured()
 
+// Display name of the signed-in editor — stamped into meta.updatedBy on each edit.
+let editorName = ''
+export function setEditorName(name: string) { editorName = name }
+
 export type Mode = 'local' | 'shared'
 export type RemoteStatus =
   | 'off' | 'signedout' | 'loading' | 'synced' | 'saving' | 'readonly' | 'offline' | 'conflict'
@@ -52,7 +56,8 @@ function init(): AppState {
 function touchActive(state: AppState, mutate: (site: SiteData) => SiteData): AppState {
   const id = state.activeSiteId
   if (!id || !state.sites[id]) return state
-  const updated = { ...mutate(state.sites[id]), updatedAt: now() }
+  const base = mutate(state.sites[id])
+  const updated = { ...base, updatedAt: now(), meta: editorName ? { ...base.meta, updatedBy: editorName } : base.meta }
   return { ...state, sites: { ...state.sites, [id]: updated } }
 }
 
@@ -101,7 +106,8 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'RENAME_SITE': {
       const site = state.sites[action.id]
       if (!site) return state
-      return { ...state, sites: { ...state.sites, [action.id]: { ...site, meta: { ...site.meta, name: action.name }, updatedAt: now() } } }
+      const meta = editorName ? { ...site.meta, name: action.name, updatedBy: editorName } : { ...site.meta, name: action.name }
+      return { ...state, sites: { ...state.sites, [action.id]: { ...site, meta, updatedAt: now() } } }
     }
     case 'SELECT_SITE':
       return state.sites[action.id] ? { ...state, activeSiteId: action.id } : state
@@ -188,6 +194,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const auth = await import('../remote/auth')
       if (!(await auth.trySsoSilent())) { setRemoteStatus('signedout'); return }
+      try { const acct = await auth.currentAccount(); setEditorName(acct?.name || acct?.username || '') } catch { /* ignore */ }
       const sp = await import('../remote/sharepointStore')
       const files = await sp.listRemoteSites()
       const sites: Record<string, SiteData> = {}

@@ -8,6 +8,7 @@ export interface Field {
   type: FieldType
   placeholder?: string
   options?: string[]
+  required?: boolean
 }
 
 export interface Column {
@@ -16,6 +17,7 @@ export interface Column {
   type: FieldType
   placeholder?: string
   options?: string[]
+  required?: boolean
 }
 
 export type Row = Record<string, string> // includes optional _id
@@ -48,6 +50,7 @@ export interface SiteMeta {
   code: string
   version: string
   classification: string
+  updatedBy?: string
 }
 
 export type KvValues = Record<string, string>
