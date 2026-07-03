@@ -18,6 +18,8 @@ export interface Column {
   placeholder?: string
   options?: string[]
   required?: boolean
+  /** Semantic tag for cross-site aggregation. 'expiry' = a contract/license end date. */
+  role?: 'expiry'
 }
 
 export type Row = Record<string, string> // includes optional _id

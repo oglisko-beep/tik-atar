@@ -1,6 +1,6 @@
 import type { Column, FieldType, Row } from '../types'
 
-type ColSpec = string | [string, Partial<{ type: FieldType; placeholder: string; options: string[] }>]
+type ColSpec = string | [string, Partial<{ type: FieldType; placeholder: string; options: string[]; role: 'expiry' }>]
 
 /** Build columns with auto ids c0..cn. `'label'` or `['label', { type, placeholder }]`. */
 export function cols(...specs: ColSpec[]): Column[] {

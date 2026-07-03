@@ -1,7 +1,7 @@
 import type { Section } from '../types'
 import { cols, exRow } from './helpers'
 
-const sup = cols('ספק', 'תחום שירות', 'איש קשר', 'טלפון / דוא"ל', 'חוזה / SLA', 'תוקף')
+const sup = cols('ספק', 'תחום שירות', 'איש קשר', 'טלפון / דוא"ל', 'חוזה / SLA', ['תוקף', { type: 'date', role: 'expiry' }])
 
 export const s7: Section = {
   id: 's7',

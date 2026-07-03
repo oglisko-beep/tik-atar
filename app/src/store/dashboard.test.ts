@@ -68,4 +68,31 @@ describe('buildDashboard', () => {
     const item = d.attention.find((x) => x.siteId === 'a')
     expect(item?.reasons.some((r) => r.includes('לא עודכן'))).toBe(true)
   })
+
+  it('collects contracts/licenses expiring within the window, sorted soonest-first', () => {
+    // NOW = 2026-06-16. s7 "תוקף" = c5, name = c0; s4 "חידוש" = c5, name = c0
+    const a = site('a', {
+      values: {
+        's7-suppliers': [{ _id: '1', c0: 'ספק קרוב', c5: '20/06/2026' }, { _id: '2', c0: 'ספק רחוק', c5: '12/2027' }],
+        's4-software': [{ _id: '1', c0: 'M365', c5: '07/2026' }], // renews end of July → within 60d
+      },
+    })
+    const d = buildDashboard({ a }, NOW)
+    expect(d.expiries.length).toBe(2) // the 2027 contract is beyond the 60-day window
+    expect(d.expiries.every((e) => e.daysLeft <= 60)).toBe(true)
+    expect(d.expiries[0].daysLeft).toBeLessThanOrEqual(d.expiries[1].daysLeft) // sorted ascending
+    expect(d.expiries[0].name).toBe('ספק קרוב') // 20/06 is soonest
+    expect(d.expiries.map((e) => e.name)).toContain('M365')
+  })
+
+  it('marks an already-expired contract as attention severity bad', () => {
+    const a = site('a', { values: { 's7-suppliers': [{ _id: '1', c0: 'ספק פג', c5: '01/2026' }] } })
+    const d = buildDashboard({ a }, NOW)
+    const exp = d.expiries.find((e) => e.name === 'ספק פג')
+    expect(exp).toBeTruthy()
+    expect(exp!.daysLeft).toBeLessThan(0)
+    const item = d.attention.find((x) => x.siteId === 'a')
+    expect(item?.severity).toBe('bad')
+    expect(item?.reasons.some((r) => r.includes('פקיעה קרובה'))).toBe(true)
+  })
 })

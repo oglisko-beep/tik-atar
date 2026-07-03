@@ -2,10 +2,12 @@ import type { ChecklistValues, Row, SiteData } from '../types'
 import { doc } from '../schema'
 import { overallCompletion, pct } from './completion'
 import { excludedOf } from './inclusion'
+import { parseDate } from './validation'
 
 const COMPLETED_PCT = 90
 const LOW_PCT = 60
 const STALE_DAYS = 90
+const EXPIRY_WINDOW_DAYS = 60
 const DAY = 86400000
 
 // Critical controls are matched by label substring against the 5.1 checklist,
@@ -34,12 +36,39 @@ export interface AttentionItem {
   severity: 'bad' | 'warn'
   reasons: string[]
 }
+export interface ExpiryItem {
+  siteId: string
+  siteName: string
+  name: string
+  typeLabel: string
+  dateStr: string
+  daysLeft: number
+}
 export interface DashboardData {
   kpis: { siteCount: number; avgCompletion: number; completed: number; needAttention: number }
   sites: SiteSummary[]
   security: { siteOrder: { id: string; name: string }[]; rows: SecurityRow[] }
   inventory: { servers: number; endpoints: number; network: number; software: number }
   attention: AttentionItem[]
+  expiries: ExpiryItem[]
+}
+
+interface ExpirySource { tableId: string; dateColId: string; nameColId: string; typeLabel: string }
+
+/** Discover expiry date columns from the schema (role: 'expiry'); item name = table's first column. */
+function expirySources(): ExpirySource[] {
+  const out: ExpirySource[] = []
+  for (const section of doc.sections) {
+    for (const block of section.blocks) {
+      if (block.kind !== 'table') continue
+      const nameCol = block.columns[0]
+      if (!nameCol) continue
+      for (const col of block.columns) {
+        if (col.role === 'expiry') out.push({ tableId: block.id, dateColId: col.id, nameColId: nameCol.id, typeLabel: col.label })
+      }
+    }
+  }
+  return out
 }
 
 function securityControls(): { rowId: string; label: string; critical: boolean }[] {
@@ -111,14 +140,45 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
     software: list.reduce((n, s) => n + filledRows(s.values['s4-software']), 0),
   }
 
+  // Expiring contracts/licenses across sites (expired or within the window).
+  const sources = expirySources()
+  const expiries: ExpiryItem[] = []
+  for (const site of list) {
+    for (const src of sources) {
+      const rows = (site.values[src.tableId] as Row[]) || []
+      for (const row of rows) {
+        const raw = (row[src.dateColId] || '').trim()
+        if (!raw) continue
+        const ts = parseDate(raw)
+        if (ts === null) continue
+        const daysLeft = Math.floor((ts - now) / DAY)
+        if (daysLeft > EXPIRY_WINDOW_DAYS) continue
+        expiries.push({
+          siteId: site.id,
+          siteName: site.meta.name || '—',
+          name: (row[src.nameColId] || '').trim() || '—',
+          typeLabel: src.typeLabel,
+          dateStr: raw,
+          daysLeft,
+        })
+      }
+    }
+  }
+  expiries.sort((a, b) => a.daysLeft - b.daysLeft)
+  const expBySite: Record<string, ExpiryItem[]> = {}
+  for (const e of expiries) (expBySite[e.siteId] ||= []).push(e)
+
   const attention: AttentionItem[] = []
   for (const s of summaries) {
     const reasons: string[] = []
     if (s.completion < LOW_PCT) reasons.push(`השלמה ${s.completion}%`)
     if (s.staleDays > STALE_DAYS) reasons.push(`לא עודכן ${relativeUpdated(s.updatedAt, now).replace('לפני ', '')}`)
     for (const g of s.criticalGaps) reasons.push(`${g} — חסר`)
+    const exp = expBySite[s.id]
+    if (exp?.length) reasons.push(exp.length === 1 ? `פקיעה קרובה: ${exp[0].name}` : `${exp.length} פקיעות קרובות`)
     if (reasons.length) {
-      attention.push({ siteId: s.id, name: s.name, severity: s.criticalGaps.length || s.completion < 30 ? 'bad' : 'warn', reasons })
+      const bad = s.criticalGaps.length > 0 || s.completion < 30 || !!exp?.some((e) => e.daysLeft < 0)
+      attention.push({ siteId: s.id, name: s.name, severity: bad ? 'bad' : 'warn', reasons })
     }
   }
   attention.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'bad' ? -1 : 1))
@@ -132,5 +192,6 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
     security: { siteOrder, rows },
     inventory,
     attention,
+    expiries,
   }
 }

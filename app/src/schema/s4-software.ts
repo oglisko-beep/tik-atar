@@ -1,7 +1,7 @@
 import type { Section } from '../types'
 import { cols, exRow } from './helpers'
 
-const sw = cols('תוכנה / שירות', 'יצרן', 'גרסה', 'סוג רישיון', 'כמות / מושבים', 'חידוש', 'ספק')
+const sw = cols('תוכנה / שירות', 'יצרן', 'גרסה', 'סוג רישיון', 'כמות / מושבים', ['חידוש', { type: 'date', role: 'expiry' }], 'ספק')
 
 export const s4: Section = {
   id: 's4',

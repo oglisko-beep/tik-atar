@@ -19,6 +19,13 @@ function cellIcon(status: string) {
   return null
 }
 
+function expiryChip(daysLeft: number): { text: string; cls: string } {
+  if (daysLeft < 0) { const a = Math.abs(daysLeft); return { text: a === 1 ? 'פג אתמול' : `פג לפני ${a} ימים`, cls: 'bad' } }
+  if (daysLeft === 0) return { text: 'פג היום', cls: 'bad' }
+  if (daysLeft === 1) return { text: 'פג מחר', cls: 'bad' }
+  return { text: `בעוד ${daysLeft} ימים`, cls: daysLeft <= 14 ? 'bad' : 'warn' }
+}
+
 export function DashboardView({ onOpenSite }: { onOpenSite: (id: string) => void }) {
   const { state } = useStore()
   const d = useMemo(() => buildDashboard(state.sites, Date.now()), [state.sites])
@@ -85,6 +92,26 @@ export function DashboardView({ onOpenSite }: { onOpenSite: (id: string) => void
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="dash-block">
+        <h2>פקיעות קרובות{d.expiries.length > 0 ? ` · ${d.expiries.length}` : ''}</h2>
+        {d.expiries.length === 0 ? (
+          <div className="dash-empty">אין חוזים או רישיונות שפגים ב-60 הימים הקרובים.</div>
+        ) : (
+          <div className="dash-exp">
+            {d.expiries.map((e, i) => {
+              const chip = expiryChip(e.daysLeft)
+              return (
+                <button key={e.siteId + '·' + i} className="dash-exp-row" onClick={() => onOpenSite(e.siteId)}>
+                  <span className={'dash-exp-chip ' + chip.cls}>{chip.text}</span>
+                  <span className="dash-exp-nm">{e.name}</span>
+                  <span className="dash-exp-meta">{e.typeLabel} · {e.dateStr} · {e.siteName}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       <section className="dash-block">
