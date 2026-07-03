@@ -30,6 +30,7 @@ flowchart TB
   SWA -->|HTTPS| USER["דפדפן המשתמש<br/>React SPA — רץ כאן"]
   USER -->|SSO · MSAL| ENTRA["Microsoft Entra ID"]
   USER -->|Microsoft Graph| SP["SharePoint · TikAtarData<br/>JSON לכל אתר"]
+  SP -.->|Power Automate · לילי 02:00| BK["backups/dd<br/>עותק יומי · ~30 יום"]
 ```
 
 ---
@@ -76,7 +77,7 @@ flowchart TB
 
 **להוספת/הסרת עורך:** ספריית `TikAtarData` → Settings → *Library settings* → *Permissions* → *Stop Inheriting Permissions* → קבוצת Members = **Read**, קבוצת העורכים (או משתמש) = **Edit/Contribute** (*Grant Permissions*).
 
-**גיבוי/שחזור נתונים:** SharePoint מנהל **היסטוריית גרסאות** לכל קובץ (שחזור דרך *Version History*), וסל מיחזור. בנוסף, האפליקציה תומכת ב**ייצוא/ייבוא JSON** (תפריט ⋯) לגיבוי ידני.
+**גיבוי/שחזור נתונים:** שלוש שכבות — (1) **גיבוי לילי אוטומטי** דרך Power Automate: כל לילה ב‑02:00 מעתיק את כל קובצי ה‑JSON ל‑`backups/<יום‑בחודש>/` באותה ספרייה (רוטציה ~30 יום, נדרס אוטומטית). הקמה: [`docs/BACKUP-SETUP.md`](BACKUP-SETUP.md). (2) **היסטוריית גרסאות** לכל קובץ + סל מיחזור של SharePoint. (3) **ייצוא/ייבוא JSON** ידני מהאפליקציה (תפריט ⋯).
 
 ---
 
@@ -162,6 +163,7 @@ Node 20+. `app/.env` הוא **gitignored** — לעולם לא נכנס ל‑git
 Azure Portal → SWA `tik-atar` → **Manage deployment token** → *Reset* → העתק → עדכן את ה‑secret `AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_GROUND_0F57E4E03` ב‑GitHub → הרץ Action מחדש.
 
 ### שחזור נתונים (SharePoint)
+- **מגיבוי לילי:** `TikAtarData/backups/<יום‑בחודש>/` → הורד את `{code}.json` הרצוי → העלה לשורש `TikAtarData` (או ייבא באפליקציה). ראה [`docs/BACKUP-SETUP.md`](BACKUP-SETUP.md).
 - **קובץ בודד:** ספריית `TikAtarData` → הקובץ → **Version History** → שחזר גרסה. אם נמחק — **סל מיחזור**.
 - **גיבוי יזום:** באפליקציה, תפריט ⋯ → **ייצוא כל האתרים (JSON)** — שמור עותק תקופתי. שחזור: ⋯ → **ייבוא מקובץ JSON**.
 
