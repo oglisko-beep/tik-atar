@@ -5,7 +5,7 @@ const contacts = cols('שם', 'תפקיד', 'ארגון / מחלקה', 'טלפו
 
 export const s8: Section = {
   id: 's8',
-  title: '8. אנשי קשר ומדרג הסלמה',
+  title: '9. אנשי קשר ומדרג הסלמה',
   note: 'רמת הסלמה 1 = ראשונה לפנייה.',
   blocks: [
     {

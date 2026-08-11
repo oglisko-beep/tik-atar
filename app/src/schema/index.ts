@@ -7,12 +7,13 @@ import { s3 } from './s3-network'
 import { s4 } from './s4-software'
 import { s5 } from './s5-infosec'
 import { s6 } from './s6-cyber'
+import { sdr } from './sdr-dr'
 import { s7 } from './s7-suppliers'
 import { s8 } from './s8-contacts'
 import { s9 } from './s9-appendices'
 
 export const doc: Doc = {
-  sections: [docControl, siteDetails, s1, s2, s3, s4, s5, s6, s7, s8, s9],
+  sections: [docControl, siteDetails, s1, s2, s3, s4, s5, s6, sdr, s7, s8, s9],
 }
 
 // Give every sub-heading a stable id (section id + its ordinal among subheads)

@@ -6,9 +6,9 @@ const blocks: Block[] = doc.sections.flatMap((s) => s.blocks)
 const withId = blocks.filter((b): b is Extract<Block, { id: string }> => 'id' in b)
 
 describe('schema', () => {
-  it('has the 11 top-level sections in order', () => {
+  it('has the 12 top-level sections in order', () => {
     expect(doc.sections.map((s) => s.id)).toEqual([
-      'docControl', 'siteDetails', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9',
+      'docControl', 'siteDetails', 's1', 's2', 's3', 's4', 's5', 's6', 'sdr', 's7', 's8', 's9',
     ])
   })
 

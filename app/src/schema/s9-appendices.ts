@@ -5,7 +5,7 @@ const list = cols('שם הנספח', 'סוג', 'קישור / מיקום')
 
 export const s9: Section = {
   id: 's9',
-  title: '9. נספחים',
+  title: '10. נספחים',
   note: 'צרפו את המסמכים הבאים כנספחים לתיק.',
   blocks: [
     {
