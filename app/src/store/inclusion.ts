@@ -65,7 +65,7 @@ export function columnarBlocksOf(section: Section): ColumnarBlockRef[] {
   for (const b of section.blocks) {
     if (b.kind === 'subhead') { subId = b.id ?? ''; continue }
     if (b.kind !== 'table' && b.kind !== 'checklist') continue
-    out.push({ subId, blockId: b.id, label: b.kind === 'table' ? 'טבלה' : 'צ׳קליסט', columns: b.columns })
+    out.push({ subId, blockId: b.id, label: b.kind === 'table' ? 'טבלה' : b.rowHeader || 'צ׳קליסט', columns: b.columns })
   }
   // Number only the kinds that repeat within the same subhead.
   const total = new Map<string, number>()

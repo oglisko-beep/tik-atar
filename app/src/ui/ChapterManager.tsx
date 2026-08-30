@@ -8,6 +8,7 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
   const { dispatch } = useStore()
   const site = useActiveSite()
   const ex = excludedOf(site)
+  // Keyed by section id AND subhead id — disjoint keyspaces (subhead ids always contain '#').
   const [open, setOpen] = useState<Record<string, boolean>>({})
 
   const allSecIds = doc.sections.map((s) => s.id)

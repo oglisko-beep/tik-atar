@@ -98,8 +98,18 @@ describe('inclusion', () => {
     }
     expect(columnarBlocksOf(sec)).toEqual([
       { subId: 'sZ#0', blockId: 'tA', label: 'טבלה', columns: [{ id: 'c0', label: 'A', type: 'text' }] },
-      { subId: 'sZ#1', blockId: 'ckB', label: 'צ׳קליסט', columns: [{ id: 'c1', label: 'B', type: 'text' }] },
+      { subId: 'sZ#1', blockId: 'ckB', label: 'ב', columns: [{ id: 'c1', label: 'B', type: 'text' }] },
     ])
+  })
+
+  it('columnarBlocksOf falls back to a generic label when a checklist has no rowHeader', () => {
+    const sec: Section = {
+      id: 'sU', title: 'U', blocks: [
+        { kind: 'subhead', text: 'ראשון', id: 'sU#0' },
+        { kind: 'checklist', id: 'ckC', rowHeader: '', columns: [{ id: 'c0', label: 'A', type: 'text' }], rows: [] },
+      ],
+    }
+    expect(columnarBlocksOf(sec).map((b) => b.label)).toEqual(['צ׳קליסט'])
   })
 
   it('columnarBlocksOf numbers repeated kinds within one subhead', () => {
