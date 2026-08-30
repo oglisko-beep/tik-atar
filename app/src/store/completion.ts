@@ -1,6 +1,6 @@
 import type { Block, BlockValue, ChecklistValues, Doc, KvValues, Row, Section } from '../types'
 import type { Excluded } from './inclusion'
-import { visibleBlocks, visibleSections } from './inclusion'
+import { visibleBlocks, visibleColumns, visibleSections } from './inclusion'
 
 export interface Completion {
   total: number
@@ -11,7 +11,7 @@ function nonEmpty(v?: string): boolean {
   return !!v && v.trim().length > 0
 }
 
-function unit(b: Block, v: BlockValue | undefined): Completion {
+function unit(b: Block, v: BlockValue | undefined, ex?: Excluded): Completion {
   if ('optional' in b && b.optional) return { total: 0, filled: 0 }
   if (b.kind === 'kv') {
     const kv = (v as KvValues) || {}
@@ -19,11 +19,13 @@ function unit(b: Block, v: BlockValue | undefined): Completion {
   }
   if (b.kind === 'checklist') {
     const cv = (v as ChecklistValues) || {}
+    // A row counts as filled only when a column the site can actually see has a value.
+    const cols = ex ? visibleColumns(b, ex) : b.columns
     return {
       total: b.rows.length,
       filled: b.rows.filter((r) => {
         const rv = cv[r.id]
-        return rv && Object.values(rv).some((x) => nonEmpty(x))
+        return !!rv && cols.some((c) => nonEmpty(rv[c.id]))
       }).length,
     }
   }
@@ -40,7 +42,7 @@ export function sectionCompletion(sec: Section, values: Record<string, BlockValu
   return blocks.reduce<Completion>(
     (acc, b) => {
       const id = 'id' in b ? b.id : undefined
-      const u = unit(b, id ? values[id] : undefined)
+      const u = unit(b, id ? values[id] : undefined, ex)
       return { total: acc.total + u.total, filled: acc.filled + u.filled }
     },
     { total: 0, filled: 0 },

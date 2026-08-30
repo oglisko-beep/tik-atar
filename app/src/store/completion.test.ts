@@ -36,4 +36,34 @@ describe('completion', () => {
     expect(c.filled).toBe(0)
     expect(c.total).toBeGreaterThan(50)
   })
+
+  it('a checklist row whose only value is in a hidden column counts as unfilled', () => {
+    const sec: Section = {
+      id: 'sC', title: 'C', blocks: [
+        { kind: 'checklist', id: 'ck', rowHeader: 'בקרה', rows: [{ id: 'r0', label: 'A' }], columns: [
+          { id: 'status', label: 'סטטוס', type: 'status' },
+          { id: 'owner', label: 'אחראי', type: 'text' },
+        ] },
+      ],
+    }
+    const values = { ck: { r0: { owner: 'דני' } } }
+    const all = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
+    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#owner']) }
+    expect(sectionCompletion(sec, values, all)).toEqual({ total: 1, filled: 1 })
+    expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 0 })
+  })
+
+  it('table completion is unaffected by column exclusion', () => {
+    const sec: Section = {
+      id: 'sT', title: 'T', blocks: [
+        { kind: 'table', id: 't', columns: [
+          { id: 'c0', label: 'A', type: 'text' },
+          { id: 'c1', label: 'B', type: 'text' },
+        ] },
+      ],
+    }
+    const values = { t: [{ _id: 'r', c0: 'x' }] }
+    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 1 })
+  })
 })
