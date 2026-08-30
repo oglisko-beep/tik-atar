@@ -94,7 +94,7 @@ Checklists **are** affected and must change. A checklist row currently counts as
 ## Guards
 
 - **Last column.** The final remaining visible column of a block cannot be excluded. Enforced in the reducer (the single mutation point); both surfaces additionally render that last checkbox disabled, so the rule is visible rather than mysterious.
-- **Unknown keys.** Stored keys that no longer match any schema column (a column renamed or removed in a future schema) are ignored on read and are not written back. No migration or cleanup pass.
+- **Unknown keys.** Stored keys that no longer match any schema column (a column renamed or removed in a future schema) are ignored by `visibleColumns` — nothing matches them, so they have no effect — and are carried through subsequent writes untouched. There is no migration or cleanup pass: a harmless stale key costs nothing, and dropping keys silently would destroy a selection if a schema id were ever restored.
 
 ## Edge cases
 
