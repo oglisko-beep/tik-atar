@@ -33,4 +33,12 @@ describe('docxExport', () => {
     const buf = await Packer.toBuffer(buildDocxDocument(site, null, imageMap))
     expect(buf.byteLength).toBeGreaterThan(2000)
   })
+
+  it('builds a valid .docx for a site with column exclusions', async () => {
+    const site = newSite('עם עמודות מוסתרות', () => 's4')
+    site.values['s7-suppliers'] = [{ _id: 'r', c0: 'ספק א', c5: '12/2026' }]
+    site.excluded = { sections: [], subsections: [], columns: ['s7-suppliers#c5'] }
+    const buf = await Packer.toBuffer(buildDocxDocument(site, null))
+    expect(buf.byteLength).toBeGreaterThan(2000)
+  })
 })

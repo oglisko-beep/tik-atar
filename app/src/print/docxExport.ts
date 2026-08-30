@@ -5,7 +5,7 @@ import {
 } from 'docx'
 import type { Block, ChecklistValues, ImageItem, KvValues, Row, SiteData } from '../types'
 import { doc as schema } from '../schema'
-import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
+import { excludedOf, visibleSections, visibleBlocks, visibleColumns, type Excluded } from '../store/inclusion'
 import { isImageItem } from '../engine/imageUtils'
 
 interface ProcessedImage { data: Uint8Array; type: 'png' | 'jpg'; width: number; height: number }
@@ -147,7 +147,7 @@ function placeholderBox(lines: string[]) {
   })
 }
 
-function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: ImageMap): (Paragraph | Table)[] {
+function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: ImageMap, ex: Excluded): (Paragraph | Table)[] {
   switch (block.kind) {
     case 'image': {
       const out: (Paragraph | Table)[] = []
@@ -182,14 +182,16 @@ function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: Im
     }
     case 'checklist': {
       const v = (values[block.id] as ChecklistValues) || {}
-      const headers = [block.rowHeader, ...block.columns.map((c) => c.label)]
-      const rows = block.rows.map((r) => [r.label, ...block.columns.map((c) => v[r.id]?.[c.id] || '')])
+      const cols = visibleColumns(block, ex)
+      const headers = [block.rowHeader, ...cols.map((c) => c.label)]
+      const rows = block.rows.map((r) => [r.label, ...cols.map((c) => v[r.id]?.[c.id] || '')])
       return [dataTable(headers, rows), spacer(80)]
     }
     case 'table': {
       const all = (values[block.id] as Row[]) || []
-      const rows = all.filter((r) => block.columns.some((c) => r[c.id]?.trim())).map((r) => block.columns.map((c) => r[c.id] || ''))
-      return [dataTable(block.columns.map((c) => c.label), rows), spacer(80)]
+      const cols = visibleColumns(block, ex)
+      const rows = all.filter((r) => cols.some((c) => r[c.id]?.trim())).map((r) => cols.map((c) => r[c.id] || ''))
+      return [dataTable(cols.map((c) => c.label), rows), spacer(80)]
     }
     default:
       return []
@@ -253,7 +255,7 @@ export function buildDocxDocument(site: SiteData, logo: Uint8Array | null, image
   for (const section of visibleSections(schema, ex)) {
     body.push(h1(section.title))
     if (section.note) body.push(note(section.note))
-    for (const block of visibleBlocks(section, ex)) body.push(...blockToDocx(block, site.values, imageMap))
+    for (const block of visibleBlocks(section, ex)) body.push(...blockToDocx(block, site.values, imageMap, ex))
   }
 
   const docxDoc = new Document({

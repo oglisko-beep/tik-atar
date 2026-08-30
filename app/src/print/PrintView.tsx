@@ -1,10 +1,10 @@
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
-import { excludedOf, visibleSections, visibleBlocks } from '../store/inclusion'
+import { excludedOf, visibleSections, visibleBlocks, visibleColumns, type Excluded } from '../store/inclusion'
 import { isImageItem } from '../engine/imageUtils'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 
-function PrintBlock({ block, values }: { block: Block; values: Record<string, BlockValue> }) {
+export function PrintBlock({ block, values, ex }: { block: Block; values: Record<string, BlockValue>; ex: Excluded }) {
   switch (block.kind) {
     case 'subhead':
       return <h3 className="pv-subhead">{block.text}</h3>
@@ -48,12 +48,13 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
     }
     case 'checklist': {
       const v = (values[block.id] as ChecklistValues) || {}
+      const cols = visibleColumns(block, ex)
       return (
         <table className="pv-table">
           <thead>
             <tr>
               <th>{block.rowHeader}</th>
-              {block.columns.map((c) => (
+              {cols.map((c) => (
                 <th key={c.id}>{c.label}</th>
               ))}
             </tr>
@@ -62,7 +63,7 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
             {block.rows.map((r) => (
               <tr key={r.id}>
                 <td>{r.label}</td>
-                {block.columns.map((c) => (
+                {cols.map((c) => (
                   <td key={c.id}>{v[r.id]?.[c.id] || ''}</td>
                 ))}
               </tr>
@@ -73,12 +74,13 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
     }
     case 'table': {
       const all = (values[block.id] as Row[]) || []
-      const rows = all.filter((r) => block.columns.some((c) => r[c.id]?.trim()))
+      const cols = visibleColumns(block, ex)
+      const rows = all.filter((r) => cols.some((c) => r[c.id]?.trim()))
       return (
         <table className="pv-table">
           <thead>
             <tr>
-              {block.columns.map((c) => (
+              {cols.map((c) => (
                 <th key={c.id}>{c.label}</th>
               ))}
             </tr>
@@ -87,14 +89,14 @@ function PrintBlock({ block, values }: { block: Block; values: Record<string, Bl
             {rows.length ? (
               rows.map((r, i) => (
                 <tr key={i}>
-                  {block.columns.map((c) => (
+                  {cols.map((c) => (
                     <td key={c.id}>{r[c.id] || ''}</td>
                   ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td className="pv-empty" colSpan={block.columns.length}>
+                <td className="pv-empty" colSpan={cols.length}>
                   — לא הוזן —
                 </td>
               </tr>
@@ -171,7 +173,7 @@ export function PrintView() {
           <h2>{s.title}</h2>
           {s.note && <p className="pv-note">{s.note}</p>}
           {visibleBlocks(s, ex).map((b, i) => (
-            <PrintBlock key={i} block={b} values={v} />
+            <PrintBlock key={i} block={b} values={v} ex={ex} />
           ))}
         </section>
       ))}
