@@ -191,3 +191,17 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .dash-exp-meta { color: var(--text-2); margin-inline-start: auto; font-size: 12.5px; }
 @media (max-width: 720px) { .dash-kpis, .dash-inv { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .dash-exp-row { flex-wrap: wrap; } .dash-exp-meta { margin-inline-start: 0; width: 100%; } }
+
+/* Per-table column picker popover */
+.colpick { position: relative; display: inline-flex; }
+.colpick-pop {
+  position: absolute; bottom: calc(100% + 6px); inset-inline-start: 0; z-index: 30;
+  min-width: 210px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-lg);
+}
+.colpick-row { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: var(--radius-xs); cursor: pointer; }
+.colpick-row:hover { background: var(--surface-3); }
+.colpick-row input:disabled { cursor: not-allowed; }
+.colpick-row input:disabled + span { opacity: 0.55; }
+.colpick-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }

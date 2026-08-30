@@ -7,6 +7,7 @@ import { TableBlock } from './TableBlock'
 import { ChecklistBlock } from './ChecklistBlock'
 import { ImageBlock } from './ImageBlock'
 import { BulletsBlock, BoxBlock, CalloutBlock } from './StaticBlocks'
+import { ColumnPicker } from '../ui/ColumnPicker'
 
 export function BlockRenderer({
   block,
@@ -81,6 +82,7 @@ export function BlockRenderer({
             value={values[block.id] as Row[] | undefined}
             showExamples={showExamples}
             onChange={(rows) => dispatch({ type: 'SET_TABLE', blockId: block.id, rows })}
+            pickerSlot={<ColumnPicker blockId={block.id} columns={block.columns} ex={ex} dispatch={dispatch} />}
           />
         </div>
       )
