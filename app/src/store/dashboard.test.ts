@@ -95,4 +95,22 @@ describe('buildDashboard', () => {
     expect(item?.severity).toBe('bad')
     expect(item?.reasons.some((r) => r.includes('פקיעה קרובה'))).toBe(true)
   })
+
+  it('skips a site that excluded the expiry column, but not its siblings', () => {
+    const soon = '01/07/2026' // ~15 days after NOW, inside the 60-day window
+    const vals = { 's7-suppliers': [{ _id: 'r', c0: 'ספק', c5: soon }] }
+    const a = site('a', { values: vals })
+    const b = { ...site('b', { values: vals }), excluded: { sections: [], subsections: [], columns: ['s7-suppliers#c5'] } }
+    const d = buildDashboard({ a, b }, NOW)
+    expect(d.expiries.map((e) => e.siteId)).toEqual(['a'])
+  })
+
+  it('falls back to the first visible column for the expiry item name', () => {
+    const s = {
+      ...site('a', { values: { 's7-suppliers': [{ _id: 'r', c0: 'ספק', c1: 'תחום', c5: '01/07/2026' }] } }),
+      excluded: { sections: [], subsections: [], columns: ['s7-suppliers#c0'] },
+    }
+    const d = buildDashboard({ a: s }, NOW)
+    expect(d.expiries[0].name).toBe('תחום')
+  })
 })

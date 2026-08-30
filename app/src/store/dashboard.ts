@@ -1,7 +1,7 @@
 import type { ChecklistValues, Row, SiteData } from '../types'
 import { doc } from '../schema'
 import { overallCompletion, pct } from './completion'
-import { excludedOf } from './inclusion'
+import { excludedOf, visibleColumns, type Excluded } from './inclusion'
 import { parseDate } from './validation'
 
 const COMPLETED_PCT = 90
@@ -55,15 +55,17 @@ export interface DashboardData {
 
 interface ExpirySource { tableId: string; dateColId: string; nameColId: string; typeLabel: string }
 
-/** Discover expiry date columns from the schema (role: 'expiry'); item name = table's first column. */
-function expirySources(): ExpirySource[] {
+/** Discover expiry date columns from the schema (role: 'expiry'), skipping any the
+ *  site has excluded. Item name = the table's first column that is still visible. */
+function expirySourcesFor(ex: Excluded): ExpirySource[] {
   const out: ExpirySource[] = []
   for (const section of doc.sections) {
     for (const block of section.blocks) {
       if (block.kind !== 'table') continue
-      const nameCol = block.columns[0]
+      const cols = visibleColumns(block, ex)
+      const nameCol = cols[0]
       if (!nameCol) continue
-      for (const col of block.columns) {
+      for (const col of cols) {
         if (col.role === 'expiry') out.push({ tableId: block.id, dateColId: col.id, nameColId: nameCol.id, typeLabel: col.label })
       }
     }
@@ -141,9 +143,9 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
   }
 
   // Expiring contracts/licenses across sites (expired or within the window).
-  const sources = expirySources()
   const expiries: ExpiryItem[] = []
   for (const site of list) {
+    const sources = expirySourcesFor(excludedOf(site))
     for (const src of sources) {
       const rows = (site.values[src.tableId] as Row[]) || []
       for (const row of rows) {
