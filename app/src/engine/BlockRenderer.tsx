@@ -82,7 +82,8 @@ export function BlockRenderer({
             value={values[block.id] as Row[] | undefined}
             showExamples={showExamples}
             onChange={(rows) => dispatch({ type: 'SET_TABLE', blockId: block.id, rows })}
-            pickerSlot={<ColumnPicker blockId={block.id} columns={block.columns} ex={ex} dispatch={dispatch} />}
+            // Full column set on purpose — the picker must list hidden columns to restore them.
+            pickerSlot={<ColumnPicker blockId={block.id} allColumns={block.columns} ex={ex} dispatch={dispatch} />}
           />
         </div>
       )

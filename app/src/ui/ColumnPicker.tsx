@@ -9,12 +9,12 @@ import { IconColumns } from './icons'
  *  columns and the site's exclusions, and emits TOGGLE_COLUMN. */
 export function ColumnPicker({
   blockId,
-  columns,
+  allColumns,
   ex,
   dispatch,
 }: {
   blockId: string
-  columns: Column[]
+  allColumns: Column[]
   ex: Excluded
   dispatch: Dispatch<Action>
 }) {
@@ -22,8 +22,8 @@ export function ColumnPicker({
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false))
 
   const isHidden = (c: Column) => ex.columns.has(columnKey(blockId, c.id))
-  const hiddenCount = columns.filter(isHidden).length
-  const visibleCount = columns.length - hiddenCount
+  const hiddenCount = allColumns.filter(isHidden).length
+  const visibleCount = allColumns.length - hiddenCount
 
   return (
     <div className="colpick" ref={ref}>
@@ -37,7 +37,7 @@ export function ColumnPicker({
       </button>
       {open && (
         <div className="colpick-pop" role="group" aria-label="בחירת עמודות">
-          {columns.map((c) => {
+          {allColumns.map((c) => {
             const hidden = isHidden(c)
             // The last visible column may not be hidden — the reducer refuses it too.
             const locked = !hidden && visibleCount <= 1
@@ -47,7 +47,7 @@ export function ColumnPicker({
                   type="checkbox"
                   checked={!hidden}
                   disabled={locked}
-                  aria-label={c.label}
+                  aria-label={locked ? `${c.label} — לא ניתן להסתיר את העמודה האחרונה הגלויה` : c.label}
                   onChange={() => dispatch({ type: 'TOGGLE_COLUMN', key: columnKey(blockId, c.id) })}
                 />
                 <span>{c.label}</span>
