@@ -66,4 +66,19 @@ describe('completion', () => {
     const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
     expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 1 })
   })
+
+  it('counts no checklist row as filled when every column is excluded', () => {
+    // Unreachable through the UI — the reducer refuses to hide a block's last visible
+    // column — but `unit` accepts any Excluded, so pin the degenerate case.
+    const sec: Section = {
+      id: 'sE', title: 'E', blocks: [
+        { kind: 'checklist', id: 'ck', rowHeader: 'בקרה', rows: [{ id: 'r0', label: 'A' }], columns: [
+          { id: 'status', label: 'סטטוס', type: 'status' },
+        ] },
+      ],
+    }
+    const values = { ck: { r0: { status: 'קיים' } } }
+    const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#status']) }
+    expect(sectionCompletion(sec, values, none)).toEqual({ total: 1, filled: 0 })
+  })
 })

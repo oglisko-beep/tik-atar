@@ -20,6 +20,9 @@ function unit(b: Block, v: BlockValue | undefined, ex?: Excluded): Completion {
   if (b.kind === 'checklist') {
     const cv = (v as ChecklistValues) || {}
     // A row counts as filled only when a column the site can actually see has a value.
+    // This also drops orphaned values stored under a column id no longer in the schema
+    // (a renamed or removed column), matching `rowsWithVisibleData`, which tables and
+    // both exporters already use. The data itself is kept — it just stops counting.
     const cols = ex ? visibleColumns(b, ex) : b.columns
     return {
       total: b.rows.length,
