@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { Block, Column, Row } from '../types'
 import { Field } from './Field'
 import { IconPlus, IconCopy, IconTrash } from '../ui/icons'
+import { rowsWithVisibleData } from '../store/inclusion'
 
 type TableBlockT = Extract<Block, { kind: 'table' }>
 
@@ -52,7 +53,7 @@ export function TableBlock({
   }
   const delRow = (i: number) => onChange(rows.filter((_, idx) => idx !== i))
 
-  const filledCount = rows.filter((r) => cols.some((c) => r[c.id]?.trim())).length
+  const filledCount = rowsWithVisibleData(rows, cols).length
 
   return (
     <div className="card">

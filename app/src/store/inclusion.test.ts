@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Block, Doc, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, columnarBlocksOf } from './inclusion'
+import type { Block, Doc, Row, Section } from '../types'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -135,5 +135,17 @@ describe('inclusion', () => {
       { subId: '', blockId: 'tPre' },
       { subId: 'sV#0', blockId: 'tPost' },
     ])
+  })
+
+  it('rowsWithVisibleData keeps a row that has a value in a visible column', () => {
+    const cols = tableBlock.columns
+    const rows: Row[] = [{ _id: 'r1', c0: 'שם א' }]
+    expect(rowsWithVisibleData(rows, cols)).toEqual(rows)
+  })
+
+  it('rowsWithVisibleData drops a row whose only value sits in a column not passed in (e.g. excluded)', () => {
+    const visibleOnly = [tableBlock.columns[0]] // c0 only — c1 treated as excluded
+    const rows: Row[] = [{ _id: 'r1', c1: '10.0.0.1' }]
+    expect(rowsWithVisibleData(rows, visibleOnly)).toEqual([])
   })
 })

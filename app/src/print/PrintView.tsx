@@ -1,6 +1,6 @@
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
-import { excludedOf, visibleSections, visibleBlocks, visibleColumns, type Excluded } from '../store/inclusion'
+import { excludedOf, visibleSections, visibleBlocks, visibleColumns, rowsWithVisibleData, type Excluded } from '../store/inclusion'
 import { isImageItem } from '../engine/imageUtils'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 
@@ -75,7 +75,7 @@ export function PrintBlock({ block, values, ex }: { block: Block; values: Record
     case 'table': {
       const all = (values[block.id] as Row[]) || []
       const cols = visibleColumns(block, ex)
-      const rows = all.filter((r) => cols.some((c) => r[c.id]?.trim()))
+      const rows = rowsWithVisibleData(all, cols)
       return (
         <table className="pv-table">
           <thead>

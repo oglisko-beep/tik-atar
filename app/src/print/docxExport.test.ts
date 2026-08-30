@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Packer } from 'docx'
+import JSZip from 'jszip'
 import { buildDocxDocument } from './docxExport'
 import { newSite } from '../store/siteData'
 
@@ -34,11 +35,14 @@ describe('docxExport', () => {
     expect(buf.byteLength).toBeGreaterThan(2000)
   })
 
-  it('builds a valid .docx for a site with column exclusions', async () => {
+  it('omits an excluded column from the exported Word document', async () => {
     const site = newSite('עם עמודות מוסתרות', () => 's4')
     site.values['s7-suppliers'] = [{ _id: 'r', c0: 'ספק א', c5: '12/2026' }]
     site.excluded = { sections: [], subsections: [], columns: ['s7-suppliers#c5'] }
     const buf = await Packer.toBuffer(buildDocxDocument(site, null))
-    expect(buf.byteLength).toBeGreaterThan(2000)
+    const xml = await (await JSZip.loadAsync(buf)).file('word/document.xml')!.async('text')
+    expect(xml).toContain('ספק א')
+    expect(xml).not.toContain('12/2026')
+    expect(xml).not.toContain('תוקף')
   })
 })

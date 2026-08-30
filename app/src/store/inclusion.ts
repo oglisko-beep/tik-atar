@@ -1,4 +1,4 @@
-import type { Block, ColumnarBlock, Column, Doc, Section, SiteData } from '../types'
+import type { Block, ColumnarBlock, Column, Doc, Row, Section, SiteData } from '../types'
 
 export interface Excluded {
   sections: Set<string>
@@ -20,6 +20,12 @@ export const columnKey = (blockId: string, colId: string): string => `${blockId}
 /** Columns of a table/checklist block that this site has not excluded. */
 export function visibleColumns(block: ColumnarBlock, ex: Excluded): Column[] {
   return block.columns.filter((c) => !ex.columns.has(columnKey(block.id, c.id)))
+}
+
+/** A row counts as present only when a column the site can see holds a value.
+ *  Shared by the editor's row count and both exporters so the rule cannot drift. */
+export function rowsWithVisibleData(rows: readonly Row[], cols: readonly Column[]): Row[] {
+  return rows.filter((r) => cols.some((c) => r[c.id]?.trim()))
 }
 
 export function visibleSections(doc: Doc, ex: Excluded): Section[] {
