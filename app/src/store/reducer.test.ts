@@ -55,6 +55,15 @@ describe('TOGGLE_COLUMN', () => {
     expect(st.sites.site1.excluded).toEqual({ sections: ['s6'], subsections: [], columns: ['s7-suppliers#c5'] })
   })
 
+  it('a refused toggle does not mark the site as edited', () => {
+    const all = columnsOf('s7-suppliers')
+    let st = baseState()
+    for (const c of all.slice(0, -1)) st = reducer(st, { type: 'TOGGLE_COLUMN', key: `s7-suppliers#${c.id}` })
+    const before = st.sites.site1.updatedAt
+    const after = reducer(st, { type: 'TOGGLE_COLUMN', key: `s7-suppliers#${all[all.length - 1].id}` })
+    expect(after.sites.site1.updatedAt).toBe(before)
+  })
+
   it('SET_INCLUSION clears column exclusions', () => {
     let st = reducer(baseState(), { type: 'TOGGLE_COLUMN', key: 's7-suppliers#c5' })
     st = reducer(st, { type: 'SET_INCLUSION', sections: [], subsections: [], columns: [] })

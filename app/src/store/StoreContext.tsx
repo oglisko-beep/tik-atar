@@ -60,6 +60,7 @@ function touchActive(state: AppState, mutate: (site: SiteData) => SiteData): App
   const id = state.activeSiteId
   if (!id || !state.sites[id]) return state
   const base = mutate(state.sites[id])
+  if (base === state.sites[id]) return state // no-op mutation — don't mark the site edited
   const updated = { ...base, updatedAt: now(), meta: editorName ? { ...base.meta, updatedBy: editorName } : base.meta }
   return { ...state, sites: { ...state.sites, [id]: updated } }
 }
@@ -138,7 +139,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'TOGGLE_COLUMN':
       return touchActive(state, (site) => {
         const ex = { ...emptyExcluded(), ...site.excluded }
-        const columns = ex.columns ?? []
+        const columns = ex.columns
         // Removing an exclusion is always allowed.
         if (columns.includes(action.key)) {
           return { ...site, excluded: { ...ex, columns: columns.filter((x) => x !== action.key) } }
