@@ -53,4 +53,12 @@ describe('TableBlock', () => {
     render(<TableBlock block={block} cols={[block.columns[0]]} value={[]} onChange={vi.fn()} showExamples={false} />)
     expect(screen.getByText(/אין שורות/).getAttribute('colspan')).toBe('3')
   })
+
+  it('counts a row as filled only when a VISIBLE column has data', () => {
+    // Data lives solely in c1 (IP), which is excluded from the rendered columns.
+    // Intended: the row reads as empty, matching how export and completion treat it.
+    const value: Row[] = [{ _id: 'a', c0: '', c1: '10.0.0.1' }]
+    render(<TableBlock block={block} cols={[block.columns[0]]} value={value} onChange={vi.fn()} showExamples={false} />)
+    expect(screen.getByText('0 שורות מלאות')).toBeInTheDocument()
+  })
 })
