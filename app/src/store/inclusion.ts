@@ -54,7 +54,7 @@ export interface ColumnarBlockRef {
   blockId: string
   /** Display label — the block has no title of its own. */
   label: string
-  columns: Column[]
+  columns: readonly Column[]
 }
 
 /** Tables and checklists of a section, tagged with the subhead they sit under.
