@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
-import { excludedOf, visibleSections } from '../store/inclusion'
+import { excludedOf, visibleColumns, visibleSections } from '../store/inclusion'
 import type { SiteData } from '../types'
 import { IconSearch } from './icons'
 
@@ -13,7 +13,8 @@ interface Entry {
   kind: string
 }
 
-function buildIndex(site: SiteData | null): Entry[] {
+/** Exported for tests: search must never surface content the site has excluded. */
+export function buildIndex(site: SiteData | null): Entry[] {
   const ex = excludedOf(site)
   const visible = new Set(visibleSections(doc, ex).map((s) => s.id))
   const out: Entry[] = []
@@ -26,10 +27,10 @@ function buildIndex(site: SiteData | null): Entry[] {
       if (cut) continue
       if (b.kind === 'subhead') out.push({ label: b.text, sectionId: s.id, sectionTitle: s.title, kind: 'תת-פרק' })
       if (b.kind === 'kv') b.fields.forEach((f) => out.push({ label: f.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'שדה' }))
-      if (b.kind === 'table') b.columns.forEach((c) => out.push({ label: c.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'טור' }))
+      if (b.kind === 'table') visibleColumns(b, ex).forEach((c) => out.push({ label: c.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'טור' }))
       if (b.kind === 'checklist') {
         b.rows.forEach((r) => out.push({ label: r.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'בקרה' }))
-        b.columns.forEach((c) => out.push({ label: c.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'טור' }))
+        visibleColumns(b, ex).forEach((c) => out.push({ label: c.label, sectionId: s.id, sectionTitle: s.title, blockId: b.id, kind: 'טור' }))
       }
     }
   }
