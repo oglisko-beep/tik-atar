@@ -56,17 +56,23 @@ export interface DashboardData {
 interface ExpirySource { tableId: string; dateColId: string; nameColId: string; typeLabel: string }
 
 /** Discover expiry date columns from the schema (role: 'expiry'), skipping any the
- *  site has excluded. Item name = the table's first column that is still visible. */
+ *  site has excluded. Item name = the table's first visible column that isn't itself
+ *  an expiry column, so an item is never named after its own expiry date. */
 function expirySourcesFor(ex: Excluded): ExpirySource[] {
   const out: ExpirySource[] = []
   for (const section of doc.sections) {
     for (const block of section.blocks) {
       if (block.kind !== 'table') continue
       const cols = visibleColumns(block, ex)
-      const nameCol = cols[0]
-      if (!nameCol) continue
+      // Defensive: the reducer only guarantees a block's last column can't be hidden,
+      // so this can't currently go empty via normal editing, but stale/imported
+      // `excluded` state could still hit it — keep the guard rather than crash below.
+      if (!cols.length) continue
+      // Identity column: the first visible column that is not itself a date. An empty
+      // id yields '—' downstream, which beats naming the item after its own expiry date.
+      const nameCol = cols.find((c) => c.role !== 'expiry')
       for (const col of cols) {
-        if (col.role === 'expiry') out.push({ tableId: block.id, dateColId: col.id, nameColId: nameCol.id, typeLabel: col.label })
+        if (col.role === 'expiry') out.push({ tableId: block.id, dateColId: col.id, nameColId: nameCol?.id ?? '', typeLabel: col.label })
       }
     }
   }

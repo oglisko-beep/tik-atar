@@ -113,4 +113,14 @@ describe('buildDashboard', () => {
     const d = buildDashboard({ a: s }, NOW)
     expect(d.expiries[0].name).toBe('תחום')
   })
+
+  it('never names an expiry item after its own date column', () => {
+    const s = {
+      ...site('a', { values: { 's4-software': [{ _id: 'r', c5: '01/07/2026', c6: 'ספק כלשהו' }] } }),
+      excluded: { sections: [], subsections: [], columns: ['s4-software#c0', 's4-software#c1', 's4-software#c2', 's4-software#c3', 's4-software#c4'] },
+    }
+    const d = buildDashboard({ a: s }, NOW)
+    expect(d.expiries[0].name).not.toBe('01/07/2026')
+    expect(d.expiries[0].name).toBe('ספק כלשהו')
+  })
 })
