@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Block, Doc, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns } from './inclusion'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, columnarBlocksOf } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -84,5 +84,46 @@ describe('inclusion', () => {
   it('column keys are namespaced per block — same colId in another block is unaffected', () => {
     const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
     expect(visibleColumns(checklistBlock, ex).map((c) => c.id)).toEqual(['c1', 'c2'])
+  })
+
+  it('columnarBlocksOf groups tables and checklists under their subhead', () => {
+    const sec: Section = {
+      id: 'sZ', title: 'Z', blocks: [
+        { kind: 'subhead', text: 'ראשון', id: 'sZ#0' },
+        { kind: 'table', id: 'tA', columns: [{ id: 'c0', label: 'A', type: 'text' }] },
+        { kind: 'note', text: 'ignored' },
+        { kind: 'subhead', text: 'שני', id: 'sZ#1' },
+        { kind: 'checklist', id: 'ckB', rowHeader: 'ב', columns: [{ id: 'c1', label: 'B', type: 'text' }], rows: [] },
+      ],
+    }
+    expect(columnarBlocksOf(sec)).toEqual([
+      { subId: 'sZ#0', blockId: 'tA', label: 'טבלה', columns: [{ id: 'c0', label: 'A', type: 'text' }] },
+      { subId: 'sZ#1', blockId: 'ckB', label: 'צ׳קליסט', columns: [{ id: 'c1', label: 'B', type: 'text' }] },
+    ])
+  })
+
+  it('columnarBlocksOf numbers repeated kinds within one subhead', () => {
+    const sec: Section = {
+      id: 'sW', title: 'W', blocks: [
+        { kind: 'subhead', text: 'א', id: 'sW#0' },
+        { kind: 'table', id: 't1', columns: [{ id: 'c', label: 'C', type: 'text' }] },
+        { kind: 'table', id: 't2', columns: [{ id: 'c', label: 'C', type: 'text' }] },
+      ],
+    }
+    expect(columnarBlocksOf(sec).map((b) => b.label)).toEqual(['טבלה 1', 'טבלה 2'])
+  })
+
+  it('columnarBlocksOf tags blocks before the first subhead with subId ""', () => {
+    const sec: Section = {
+      id: 'sV', title: 'V', blocks: [
+        { kind: 'table', id: 'tPre', columns: [{ id: 'c0', label: 'A', type: 'text' }] },
+        { kind: 'subhead', text: 'ראשון', id: 'sV#0' },
+        { kind: 'table', id: 'tPost', columns: [{ id: 'c1', label: 'B', type: 'text' }] },
+      ],
+    }
+    expect(columnarBlocksOf(sec).map((b) => ({ subId: b.subId, blockId: b.blockId }))).toEqual([
+      { subId: '', blockId: 'tPre' },
+      { subId: 'sV#0', blockId: 'tPost' },
+    ])
   })
 })

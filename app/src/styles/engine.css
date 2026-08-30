@@ -134,6 +134,9 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .cm-exp { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; display: flex; transition: transform .15s; }
 .cm-exp.open { transform: rotate(180deg); }
 .cm-foot { padding: 11px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.cm-blk { padding-inline-start: 52px; font-size: 12px; color: var(--muted); }
+.cm-col { padding-inline-start: 68px; }
+.cm-check.locked { opacity: 0.5; cursor: not-allowed; }
 .nav-group-head { display: flex; align-items: center; justify-content: space-between; padding-inline-end: 8px; }
 
 /* Managers dashboard */

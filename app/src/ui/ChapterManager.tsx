@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { doc } from '../schema'
 import { useStore, useActiveSite } from '../store/StoreContext'
-import { excludedOf, subsectionsOf } from '../store/inclusion'
+import { excludedOf, subsectionsOf, columnarBlocksOf, columnKey } from '../store/inclusion'
 import { IconX, IconChevronDown, IconCheck } from './icons'
 
 export function ChapterManager({ onClose }: { onClose: () => void }) {
@@ -33,6 +33,7 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
             const subs = subsectionsOf(s)
             const num = s.title.match(/^(\d+)\./)?.[1]
             const label = s.title.replace(/^\d+\.\s*/, '')
+            const columnarBlocks = columnarBlocksOf(s)
             return (
               <div key={s.id}>
                 <div className="cm-row">
@@ -49,12 +50,47 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
                 </div>
                 {open[s.id] && subs.map((sub) => {
                   const subOn = !ex.subsections.has(sub.id)
+                  const blocks = columnarBlocks.filter((b) => b.subId === sub.id)
                   return (
-                    <div className="cm-row cm-sub" key={sub.id}>
-                      <button className={'cm-check' + (subOn ? ' on' : '')} aria-pressed={subOn} aria-label={sub.text} onClick={() => dispatch({ type: 'TOGGLE_SUBSECTION', subId: sub.id })}>
-                        {subOn && <IconCheck width={13} height={13} />}
-                      </button>
-                      <span className="cm-nm">{sub.text}</span>
+                    <div key={sub.id}>
+                      <div className="cm-row cm-sub">
+                        <button className={'cm-check' + (subOn ? ' on' : '')} aria-pressed={subOn} aria-label={sub.text} onClick={() => dispatch({ type: 'TOGGLE_SUBSECTION', subId: sub.id })}>
+                          {subOn && <IconCheck width={13} height={13} />}
+                        </button>
+                        <span className="cm-nm">{sub.text}</span>
+                        {blocks.length > 0 && subOn && (
+                          <button className={'cm-exp' + (open[sub.id] ? ' open' : '')} aria-label="הצג עמודות" onClick={() => setOpen((o) => ({ ...o, [sub.id]: !o[sub.id] }))}>
+                            <IconChevronDown width={15} height={15} />
+                          </button>
+                        )}
+                      </div>
+                      {open[sub.id] && subOn && blocks.map((b) => {
+                        const visible = b.columns.filter((c) => !ex.columns.has(columnKey(b.blockId, c.id)))
+                        return (
+                          <div key={b.blockId}>
+                            <div className="cm-row cm-blk"><span className="cm-nm">{b.label}</span></div>
+                            {b.columns.map((c) => {
+                              const key = columnKey(b.blockId, c.id)
+                              const on = !ex.columns.has(key)
+                              const locked = on && visible.length <= 1
+                              return (
+                                <div className="cm-row cm-col" key={c.id}>
+                                  <button
+                                    className={'cm-check' + (on ? ' on' : '') + (locked ? ' locked' : '')}
+                                    aria-pressed={on}
+                                    aria-label={locked ? `${c.label} — לא ניתן להסתיר את העמודה האחרונה הגלויה` : c.label}
+                                    disabled={locked}
+                                    onClick={() => dispatch({ type: 'TOGGLE_COLUMN', key })}
+                                  >
+                                    {on && <IconCheck width={12} height={12} />}
+                                  </button>
+                                  <span className="cm-nm">{c.label}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      })}
                     </div>
                   )
                 })}

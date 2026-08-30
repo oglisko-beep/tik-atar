@@ -47,3 +47,39 @@ export function subsectionsOf(section: Section): { id: string; text: string }[] 
   for (const b of section.blocks) if (b.kind === 'subhead' && b.id) subs.push({ id: b.id, text: b.text })
   return subs
 }
+
+export interface ColumnarBlockRef {
+  /** Subhead this block sits under; '' for blocks before the first subhead. */
+  subId: string
+  blockId: string
+  /** Display label — the block has no title of its own. */
+  label: string
+  columns: Column[]
+}
+
+/** Tables and checklists of a section, tagged with the subhead they sit under.
+ *  Repeated kinds under one subhead are numbered so they can be told apart. */
+export function columnarBlocksOf(section: Section): ColumnarBlockRef[] {
+  const out: ColumnarBlockRef[] = []
+  let subId = ''
+  for (const b of section.blocks) {
+    if (b.kind === 'subhead') { subId = b.id ?? ''; continue }
+    if (b.kind !== 'table' && b.kind !== 'checklist') continue
+    out.push({ subId, blockId: b.id, label: b.kind === 'table' ? 'טבלה' : 'צ׳קליסט', columns: b.columns })
+  }
+  // Number only the kinds that repeat within the same subhead.
+  const total = new Map<string, number>()
+  for (const item of out) {
+    const k = `${item.subId}|${item.label}`
+    total.set(k, (total.get(k) ?? 0) + 1)
+  }
+  const seen = new Map<string, number>()
+  for (const item of out) {
+    const k = `${item.subId}|${item.label}`
+    if ((total.get(k) ?? 0) < 2) continue
+    const n = (seen.get(k) ?? 0) + 1
+    seen.set(k, n)
+    item.label = `${item.label} ${n}`
+  }
+  return out
+}
