@@ -24,8 +24,8 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
           <button className="icon-btn" onClick={onClose} aria-label="סגור"><IconX /></button>
         </div>
         <div className="cm-tools">
-          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: [], subsections: [] })}>בחר הכול</button>
-          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: allSecIds, subsections: allSubIds })}>נקה הכול</button>
+          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: [], subsections: [], columns: [] })}>בחר הכול</button>
+          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: allSecIds, subsections: allSubIds, columns: [] })}>נקה הכול</button>
         </div>
         <div className="cm-list">
           {doc.sections.map((s) => {
