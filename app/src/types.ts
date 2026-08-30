@@ -71,7 +71,7 @@ export interface SiteData {
   updatedAt: string
   meta: SiteMeta
   values: Record<string, BlockValue>
-  excluded?: { sections: string[]; subsections: string[] }
+  excluded?: { sections: string[]; subsections: string[]; columns?: string[] }
 }
 
 export interface AppState {

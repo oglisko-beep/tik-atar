@@ -14,11 +14,11 @@ describe('completion with exclusion', () => {
     expect(sectionCompletion(sec, {}).total).toBe(2)
   })
   it('drops blocks under an excluded subhead', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set(['s#0']) }
+    const ex = { sections: new Set<string>(), subsections: new Set(['s#0']), columns: new Set<string>() }
     expect(sectionCompletion(sec, {}, ex).total).toBe(1)
   })
   it('overall drops excluded sections', () => {
-    const ex = { sections: new Set(['s']), subsections: new Set<string>() }
+    const ex = { sections: new Set(['s']), subsections: new Set<string>(), columns: new Set<string>() }
     expect(overallCompletion(doc, {}, ex).total).toBe(0)
   })
 })

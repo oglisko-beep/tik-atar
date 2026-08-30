@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Doc, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf } from './inclusion'
+import type { Block, Doc, Section } from '../types'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -12,6 +12,23 @@ const section: Section = {
   ],
 }
 const doc: Doc = { sections: [section, { id: 'sY', title: 'Y', blocks: [] }] }
+
+const tableBlock = {
+  kind: 'table', id: 't',
+  columns: [
+    { id: 'c0', label: 'שם', type: 'text' },
+    { id: 'c1', label: 'IP', type: 'ip' },
+  ],
+} as Extract<Block, { kind: 'table' }>
+
+const checklistBlock = {
+  kind: 'checklist', id: 'ck', rowHeader: 'בקרה',
+  columns: [
+    { id: 'c1', label: 'סטטוס', type: 'status' },
+    { id: 'c2', label: 'אחראי', type: 'text' },
+  ],
+  rows: [{ id: 'r0', label: 'A' }],
+} as Extract<Block, { kind: 'checklist' }>
 
 describe('inclusion', () => {
   it('excludedOf(null) -> empty sets', () => {
@@ -25,11 +42,11 @@ describe('inclusion', () => {
     expect(ex.subsections.has('s1#0')).toBe(true)
   })
   it('visibleSections drops excluded sections', () => {
-    const ex = { sections: new Set(['sY']), subsections: new Set<string>() }
+    const ex = { sections: new Set(['sY']), subsections: new Set<string>(), columns: new Set<string>() }
     expect(visibleSections(doc, ex).map((s) => s.id)).toEqual(['sX'])
   })
   it('visibleBlocks drops an excluded subhead group, keeps the intro and other groups', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set(['sX#0']) }
+    const ex = { sections: new Set<string>(), subsections: new Set(['sX#0']), columns: new Set<string>() }
     const ids = visibleBlocks(section, ex).map((b) => ('id' in b ? b.id : b.kind))
     expect(ids).toEqual(['intro', 'sX#1', 'b1'])
   })
@@ -38,5 +55,34 @@ describe('inclusion', () => {
       { id: 'sX#0', text: 'A' },
       { id: 'sX#1', text: 'B' },
     ])
+  })
+
+  it('excludedOf(null) -> empty columns set', () => {
+    expect(excludedOf(null).columns.size).toBe(0)
+  })
+
+  it('excludedOf tolerates a site saved before columns existed', () => {
+    const ex = excludedOf({ excluded: { sections: [], subsections: [] } } as never)
+    expect(ex.columns.size).toBe(0)
+  })
+
+  it('excludedOf reads the columns array into a set', () => {
+    const ex = excludedOf({ excluded: { sections: [], subsections: [], columns: ['t#c1'] } } as never)
+    expect(ex.columns.has('t#c1')).toBe(true)
+  })
+
+  it('visibleColumns returns every column when nothing is excluded', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
+    expect(visibleColumns(tableBlock, ex).map((c) => c.id)).toEqual(['c0', 'c1'])
+  })
+
+  it('visibleColumns drops an excluded column', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    expect(visibleColumns(tableBlock, ex).map((c) => c.id)).toEqual(['c0'])
+  })
+
+  it('column keys are namespaced per block — same colId in another block is unaffected', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    expect(visibleColumns(checklistBlock, ex).map((c) => c.id)).toEqual(['c1', 'c2'])
   })
 })

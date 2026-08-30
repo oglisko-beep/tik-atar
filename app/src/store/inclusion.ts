@@ -1,15 +1,28 @@
-import type { Block, Doc, Section, SiteData } from '../types'
+import type { Block, Column, Doc, Section, SiteData } from '../types'
 
 export interface Excluded {
   sections: Set<string>
   subsections: Set<string>
+  columns: Set<string>
 }
 
 export function excludedOf(site: SiteData | null | undefined): Excluded {
   return {
     sections: new Set(site?.excluded?.sections ?? []),
     subsections: new Set(site?.excluded?.subsections ?? []),
+    columns: new Set(site?.excluded?.columns ?? []),
   }
+}
+
+/** Key for one column of one block. The only place this format is built. */
+export const columnKey = (blockId: string, colId: string): string => `${blockId}#${colId}`
+
+/** Columns of a table/checklist block that this site has not excluded. */
+export function visibleColumns(
+  block: Extract<Block, { kind: 'table' | 'checklist' }>,
+  ex: Excluded,
+): Column[] {
+  return block.columns.filter((c) => !ex.columns.has(columnKey(block.id, c.id)))
 }
 
 export function visibleSections(doc: Doc, ex: Excluded): Section[] {
