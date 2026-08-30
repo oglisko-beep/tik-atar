@@ -27,7 +27,7 @@ export function SectionView({ section }: { section: Section }) {
       </div>
 
       {visibleBlocks(section, ex).map((block, i) => (
-        <BlockRenderer key={i} block={block} values={values} dispatch={dispatch} showExamples={showExamples} />
+        <BlockRenderer key={i} block={block} values={values} dispatch={dispatch} showExamples={showExamples} ex={ex} />
       ))}
     </div>
   )

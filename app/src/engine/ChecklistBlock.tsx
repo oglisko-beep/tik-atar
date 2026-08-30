@@ -1,14 +1,16 @@
-import type { Block, ChecklistValues } from '../types'
+import type { Block, ChecklistValues, Column } from '../types'
 import { Field } from './Field'
 
 type ChecklistBlockT = Extract<Block, { kind: 'checklist' }>
 
 export function ChecklistBlock({
   block,
+  cols,
   value,
   onChange,
 }: {
   block: ChecklistBlockT
+  cols: Column[]
   value: ChecklistValues | undefined
   onChange: (rowId: string, colId: string, value: string) => void
 }) {
@@ -19,7 +21,7 @@ export function ChecklistBlock({
         <thead>
           <tr>
             <th className="ctrl-label">{block.rowHeader}</th>
-            {block.columns.map((c) => (
+            {cols.map((c) => (
               <th key={c.id}>{c.label}</th>
             ))}
           </tr>
@@ -28,7 +30,7 @@ export function ChecklistBlock({
           {block.rows.map((r) => (
             <tr key={r.id}>
               <td className="ctrl-label">{r.label}</td>
-              {block.columns.map((c) => (
+              {cols.map((c) => (
                 <td key={c.id}>
                   <Field
                     compact

@@ -15,7 +15,7 @@ const block = {
 describe('TableBlock', () => {
   it('adds a row when "הוסף שורה" is clicked', () => {
     const onChange = vi.fn()
-    render(<TableBlock block={block} value={[]} onChange={onChange} showExamples={false} />)
+    render(<TableBlock block={block} cols={block.columns} value={[]} onChange={onChange} showExamples={false} />)
     fireEvent.click(screen.getByRole('button', { name: /הוסף שורה/ }))
     expect(onChange).toHaveBeenCalledTimes(1)
     const rows = onChange.mock.calls[0][0] as Row[]
@@ -26,7 +26,7 @@ describe('TableBlock', () => {
   it('edits a cell and emits the full rows array', () => {
     const onChange = vi.fn()
     const value: Row[] = [{ _id: 'a', c0: '', c1: '' }]
-    render(<TableBlock block={block} value={value} onChange={onChange} showExamples={false} />)
+    render(<TableBlock block={block} cols={block.columns} value={value} onChange={onChange} showExamples={false} />)
     fireEvent.change(screen.getByLabelText('שם'), { target: { value: 'GY-DC01' } })
     expect(onChange).toHaveBeenCalled()
     const rows = onChange.mock.calls[0][0] as Row[]
@@ -35,9 +35,22 @@ describe('TableBlock', () => {
 
   it('shows example rows only when showExamples is on', () => {
     const exBlock = { ...block, examples: [{ c0: 'דוגמה-שם', c1: '1.2.3.4' }] } as Extract<Block, { kind: 'table' }>
-    const { rerender } = render(<TableBlock block={exBlock} value={[]} onChange={vi.fn()} showExamples={false} />)
+    const { rerender } = render(
+      <TableBlock block={exBlock} cols={exBlock.columns} value={[]} onChange={vi.fn()} showExamples={false} />,
+    )
     expect(screen.queryByText('דוגמה-שם')).toBeNull()
-    rerender(<TableBlock block={exBlock} value={[]} onChange={vi.fn()} showExamples />)
+    rerender(<TableBlock block={exBlock} cols={exBlock.columns} value={[]} onChange={vi.fn()} showExamples />)
     expect(screen.getByText('דוגמה-שם')).toBeInTheDocument()
+  })
+
+  it('renders only the columns it is given', () => {
+    render(<TableBlock block={block} cols={[block.columns[0]]} value={[]} onChange={vi.fn()} showExamples={false} />)
+    expect(screen.getByText('שם')).toBeInTheDocument()
+    expect(screen.queryByText('IP')).toBeNull()
+  })
+
+  it('spans the empty-state cell across the visible columns only', () => {
+    render(<TableBlock block={block} cols={[block.columns[0]]} value={[]} onChange={vi.fn()} showExamples={false} />)
+    expect(screen.getByText(/אין שורות/).getAttribute('colspan')).toBe('3')
   })
 })

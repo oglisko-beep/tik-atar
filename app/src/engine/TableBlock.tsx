@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import type { Block, Row } from '../types'
+import type { ReactNode } from 'react'
+import type { Block, Column, Row } from '../types'
 import { Field } from './Field'
 import { IconPlus, IconCopy, IconTrash } from '../ui/icons'
 
@@ -14,14 +15,18 @@ function emptyRow(): Row {
 
 export function TableBlock({
   block,
+  cols,
   value,
   onChange,
   showExamples,
+  pickerSlot,
 }: {
   block: TableBlockT
+  cols: Column[]
   value: Row[] | undefined
   onChange: (rows: Row[]) => void
   showExamples: boolean
+  pickerSlot?: ReactNode
 }) {
   // Rows shown before anything is stored: seedRows or `minRows` blank rows. Computed once.
   const seeded = useMemo<Row[]>(
@@ -33,7 +38,6 @@ export function TableBlock({
   )
   const stored = value ?? []
   const rows = stored.length ? stored : seeded
-  const cols = block.columns
 
   const setCell = (i: number, colId: string, v: string) => {
     const base = rows.map((r) => ({ ...r }))
@@ -118,6 +122,7 @@ export function TableBlock({
         <button className="btn btn-sm add-row-btn" onClick={addRow}>
           <IconPlus /> הוסף שורה
         </button>
+        {pickerSlot}
         <span className="muted" style={{ fontSize: 12 }}>
           {filledCount} שורות מלאות
         </span>

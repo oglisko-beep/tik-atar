@@ -1,4 +1,4 @@
-import type { Block, Column, Doc, Section, SiteData } from '../types'
+import type { Block, ColumnarBlock, Column, Doc, Section, SiteData } from '../types'
 
 export interface Excluded {
   sections: Set<string>
@@ -18,10 +18,7 @@ export function excludedOf(site: SiteData | null | undefined): Excluded {
 export const columnKey = (blockId: string, colId: string): string => `${blockId}#${colId}`
 
 /** Columns of a table/checklist block that this site has not excluded. */
-export function visibleColumns(
-  block: Extract<Block, { kind: 'table' | 'checklist' }>,
-  ex: Excluded,
-): Column[] {
+export function visibleColumns(block: ColumnarBlock, ex: Excluded): Column[] {
   return block.columns.filter((c) => !ex.columns.has(columnKey(block.id, c.id)))
 }
 

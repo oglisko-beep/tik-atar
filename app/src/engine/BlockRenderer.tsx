@@ -1,6 +1,7 @@
 import type { Dispatch } from 'react'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 import type { Action } from '../store/StoreContext'
+import { visibleColumns, type Excluded } from '../store/inclusion'
 import { KvBlock } from './KvBlock'
 import { TableBlock } from './TableBlock'
 import { ChecklistBlock } from './ChecklistBlock'
@@ -12,11 +13,13 @@ export function BlockRenderer({
   values,
   dispatch,
   showExamples,
+  ex,
 }: {
   block: Block
   values: Record<string, BlockValue>
   dispatch: Dispatch<Action>
   showExamples: boolean
+  ex: Excluded
 }) {
   switch (block.kind) {
     case 'subhead':
@@ -61,6 +64,7 @@ export function BlockRenderer({
         <div className="block" id={`block-${block.id}`}>
           <ChecklistBlock
             block={block}
+            cols={visibleColumns(block, ex)}
             value={values[block.id] as ChecklistValues | undefined}
             onChange={(rowId, colId, value) =>
               dispatch({ type: 'SET_CHECKLIST', blockId: block.id, rowId, colId, value })
@@ -73,6 +77,7 @@ export function BlockRenderer({
         <div className="block" id={`block-${block.id}`}>
           <TableBlock
             block={block}
+            cols={visibleColumns(block, ex)}
             value={values[block.id] as Row[] | undefined}
             showExamples={showExamples}
             onChange={(rows) => dispatch({ type: 'SET_TABLE', blockId: block.id, rows })}

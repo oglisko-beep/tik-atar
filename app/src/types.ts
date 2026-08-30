@@ -35,6 +35,8 @@ export type Block =
   | { kind: 'callout'; tone: 'info' | 'warn'; title: string; items: string[] }
   | { kind: 'image'; id: string; hint?: string; multi?: boolean }
 
+export type ColumnarBlock = Extract<Block, { kind: 'table' | 'checklist' }>
+
 export interface Section {
   id: string
   title: string
