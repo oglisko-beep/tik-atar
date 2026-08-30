@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { doc } from './index'
+import { doc, columnsOf } from './index'
 import type { Block } from '../types'
 
 const blocks: Block[] = doc.sections.flatMap((s) => s.blocks)
@@ -35,5 +35,18 @@ describe('schema', () => {
     const statusCols = cl.flatMap((b) => b.columns).filter((c) => c.id === 'status')
     expect(statusCols.length).toBe(2) // s5-controls + s6-controls
     statusCols.forEach((c) => expect(c.type).toBe('status'))
+  })
+})
+
+describe('columnsOf', () => {
+  it('returns the columns of a table block', () => {
+    expect(columnsOf('s4-software').map((c) => c.id).length).toBeGreaterThan(1)
+  })
+  it('returns the columns of a checklist block', () => {
+    expect(columnsOf('s6-controls').map((c) => c.id)).toContain('status')
+  })
+  it('returns an empty array for an unknown or non-columnar block', () => {
+    expect(columnsOf('does-not-exist')).toEqual([])
+    expect(columnsOf('s6-soc')).toEqual([])
   })
 })

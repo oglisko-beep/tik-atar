@@ -1,4 +1,4 @@
-import type { Doc } from '../types'
+import type { Column, Doc } from '../types'
 import { docControl } from './docControl'
 import { siteDetails } from './siteDetails'
 import { s1 } from './s1-endpoints'
@@ -31,4 +31,15 @@ for (const section of doc.sections) {
 /** Convenience: map of every data-block id -> its block, for quick lookups. */
 export function dataBlocks() {
   return doc.sections.flatMap((s) => s.blocks).filter((b): b is Extract<typeof b, { id: string }> => 'id' in b)
+}
+
+/** Columns of a table/checklist block, by block id. Empty when the id is unknown
+ *  or the block has no columns. Used by the reducer's last-column guard. */
+export function columnsOf(blockId: string): Column[] {
+  for (const section of doc.sections) {
+    for (const block of section.blocks) {
+      if ((block.kind === 'table' || block.kind === 'checklist') && block.id === blockId) return block.columns
+    }
+  }
+  return []
 }
