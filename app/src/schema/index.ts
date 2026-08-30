@@ -35,7 +35,7 @@ export function dataBlocks() {
 
 /** Columns of a table/checklist block, by block id. Empty when the id is unknown
  *  or the block has no columns. Used by the reducer's last-column guard. */
-export function columnsOf(blockId: string): Column[] {
+export function columnsOf(blockId: string): readonly Column[] {
   for (const section of doc.sections) {
     for (const block of section.blocks) {
       if ((block.kind === 'table' || block.kind === 'checklist') && block.id === blockId) return block.columns
