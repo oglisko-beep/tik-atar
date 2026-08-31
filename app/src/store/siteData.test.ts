@@ -21,4 +21,26 @@ describe('siteData', () => {
     ;(b.values['x'] as Record<string, string>).f = 'changed'
     expect((a.values['x'] as Record<string, string>).f).toBe('v')
   })
+
+  it('carries the portfolio scope over to the clone', () => {
+    // Cloning is how a new building's portfolio is started from an existing one,
+    // so the chapter/sub-chapter/column choices are exactly what should survive.
+    const a = newSite('A', () => 'a')
+    a.excluded = { sections: ['s6'], subsections: ['s3#1'], columns: ['s7-suppliers#c5'] }
+    const b = cloneSite(a, 'B', () => 'b')
+    expect(b.excluded).toEqual({ sections: ['s6'], subsections: ['s3#1'], columns: ['s7-suppliers#c5'] })
+  })
+
+  it('deep-copies the scope so the clone and the source diverge', () => {
+    const a = newSite('A', () => 'a')
+    a.excluded = { sections: [], subsections: [], columns: ['s7-suppliers#c5'] }
+    const b = cloneSite(a, 'B', () => 'b')
+    b.excluded!.columns!.push('s4-software#c5')
+    expect(a.excluded!.columns).toEqual(['s7-suppliers#c5'])
+  })
+
+  it('leaves a site with no scope set without one', () => {
+    const a = newSite('A', () => 'a')
+    expect(cloneSite(a, 'B', () => 'b').excluded).toBeUndefined()
+  })
 })

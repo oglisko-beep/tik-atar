@@ -24,5 +24,9 @@ export function cloneSite(src: SiteData, name: string, id: () => string = uuid):
     updatedAt: ts,
     meta: { ...src.meta, name },
     values: structuredClone(src.values),
+    // The portfolio scope travels with the clone: starting a new building from an
+    // existing one is exactly when the chapter/sub-chapter/column choices are worth
+    // keeping. Omitted entirely when the source never set one.
+    ...(src.excluded ? { excluded: structuredClone(src.excluded) } : {}),
   }
 }
