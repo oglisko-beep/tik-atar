@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { SiteData } from '../types'
+import type { Row, SiteData } from '../types'
 import { buildDashboard, relativeUpdated } from './dashboard'
 
 const DAY = 86400000
@@ -34,13 +34,32 @@ describe('buildDashboard', () => {
   })
 
   it('sums filled inventory rows across sites (ignores empty rows)', () => {
-    const a = site('a', { values: { 's3-servers': [{ _id: '1', x: 'srv1' }, { _id: '2' }], 's1-equipment': [{ _id: '1', y: 'pc' }] } })
-    const b = site('b', { values: { 's3-servers': [{ _id: '1', x: 'srv2' }], 's4-software': [{ _id: '1', z: 'M365' }] } })
+    // c0 is the first real column of each table — ids are auto-numbered c0..cn by
+    // the cols() helper, and a row must carry a real column to count.
+    const a = site('a', { values: { 's3-servers': [{ _id: '1', c0: 'srv1' }, { _id: '2' }], 's1-equipment': [{ _id: '1', c0: 'pc' }] } })
+    const b = site('b', { values: { 's3-servers': [{ _id: '1', c0: 'srv2' }], 's4-software': [{ _id: '1', c0: 'M365' }] } })
     const d = buildDashboard({ a, b }, NOW)
     expect(d.inventory.servers).toBe(2)
     expect(d.inventory.endpoints).toBe(1)
     expect(d.inventory.software).toBe(1)
     expect(d.inventory.network).toBe(0)
+  })
+
+  it('does not count an inventory row whose only value is in an excluded column', () => {
+    const vals: Record<string, Row[]> = { 's3-servers': [{ _id: '1', c0: 'srv1' }, { _id: '2', c1: 'תפקיד בלבד' }] }
+    expect(buildDashboard({ a: site('a', { values: vals }) }, NOW).inventory.servers).toBe(2)
+
+    const b = {
+      ...site('b', { values: vals }),
+      excluded: { sections: [], subsections: [], columns: ['s3-servers#c1'] },
+    }
+    // Row 2 has nothing visible left, so the tile counts one server, not two.
+    expect(buildDashboard({ b }, NOW).inventory.servers).toBe(1)
+  })
+
+  it('ignores inventory values stored under a column id absent from the schema', () => {
+    const a = site('a', { values: { 's3-servers': [{ _id: '1', ghost: 'leftover' }] } })
+    expect(buildDashboard({ a }, NOW).inventory.servers).toBe(0)
   })
 
   it('builds a security row per control with per-site statuses and critical tagging', () => {

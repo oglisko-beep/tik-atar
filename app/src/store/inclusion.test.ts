@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Block, Doc, Row, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, visibleColumnsIn, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -79,6 +79,13 @@ describe('inclusion', () => {
   it('visibleColumns drops an excluded column', () => {
     const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
     expect(visibleColumns(tableBlock, ex).map((c) => c.id)).toEqual(['c0'])
+  })
+
+  it('visibleColumnsIn applies the same rule for callers holding an id, not a block', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    expect(visibleColumnsIn('t', tableBlock.columns, ex).map((c) => c.id)).toEqual(['c0'])
+    // The key is namespaced, so the same columns under another block id are untouched.
+    expect(visibleColumnsIn('other', tableBlock.columns, ex).map((c) => c.id)).toEqual(['c0', 'c1'])
   })
 
   it('column keys are namespaced per block — same colId in another block is unaffected', () => {

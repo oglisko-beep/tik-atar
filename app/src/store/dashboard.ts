@@ -1,7 +1,7 @@
 import type { ChecklistValues, Row, SiteData } from '../types'
-import { doc } from '../schema'
+import { columnsOf, doc } from '../schema'
 import { overallCompletion, pct } from './completion'
-import { excludedOf, visibleColumns, type Excluded } from './inclusion'
+import { excludedOf, rowsWithVisibleData, visibleColumns, visibleColumnsIn, type Excluded } from './inclusion'
 import { parseDate } from './validation'
 
 const COMPLETED_PCT = 90
@@ -89,9 +89,13 @@ function securityControls(): { rowId: string; label: string; critical: boolean }
   }))
 }
 
-function filledRows(v: unknown): number {
-  const rows = (v as Row[]) || []
-  return rows.filter((r) => Object.entries(r).some(([k, val]) => k !== '_id' && typeof val === 'string' && val.trim().length > 0)).length
+/** Inventory rows a site actually shows: a row counts only when a column that
+ *  site can see holds a value — the same rule the editor's row count, both
+ *  exporters and completion use, so the tiles cannot disagree with the tables. */
+function filledRows(site: SiteData, blockId: string): number {
+  const ex = excludedOf(site)
+  const cols = visibleColumnsIn(blockId, columnsOf(blockId), ex)
+  return rowsWithVisibleData((site.values[blockId] as Row[]) || [], cols).length
 }
 
 /** Human-friendly "time since update" in Hebrew, with dual forms. */
@@ -142,10 +146,10 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
   })
 
   const inventory = {
-    servers: list.reduce((n, s) => n + filledRows(s.values['s3-servers']), 0),
-    endpoints: list.reduce((n, s) => n + filledRows(s.values['s1-equipment']), 0),
-    network: list.reduce((n, s) => n + filledRows(s.values['s3-netgear']), 0),
-    software: list.reduce((n, s) => n + filledRows(s.values['s4-software']), 0),
+    servers: list.reduce((n, s) => n + filledRows(s, 's3-servers'), 0),
+    endpoints: list.reduce((n, s) => n + filledRows(s, 's1-equipment'), 0),
+    network: list.reduce((n, s) => n + filledRows(s, 's3-netgear'), 0),
+    software: list.reduce((n, s) => n + filledRows(s, 's4-software'), 0),
   }
 
   // Expiring contracts/licenses across sites (expired or within the window).

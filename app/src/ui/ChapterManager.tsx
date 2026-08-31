@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { doc } from '../schema'
 import { useStore, useActiveSite } from '../store/StoreContext'
-import { excludedOf, subsectionsOf, columnarBlocksOf, columnKey } from '../store/inclusion'
+import { excludedOf, subsectionsOf, columnarBlocksOf, columnKey, visibleColumnsIn } from '../store/inclusion'
 import { IconX, IconChevronDown, IconCheck } from './icons'
 
 export function ChapterManager({ onClose }: { onClose: () => void }) {
@@ -66,7 +66,7 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
                         )}
                       </div>
                       {open[sub.id] && subOn && blocks.map((b) => {
-                        const visible = b.columns.filter((c) => !ex.columns.has(columnKey(b.blockId, c.id)))
+                        const visible = visibleColumnsIn(b.blockId, b.columns, ex)
                         return (
                           <div key={b.blockId}>
                             <div className="cm-row cm-blk"><span className="cm-nm">{b.label}</span></div>

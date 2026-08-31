@@ -19,7 +19,14 @@ export const columnKey = (blockId: string, colId: string): string => `${blockId}
 
 /** Columns of a table/checklist block that this site has not excluded. */
 export function visibleColumns(block: ColumnarBlock, ex: Excluded): Column[] {
-  return block.columns.filter((c) => !ex.columns.has(columnKey(block.id, c.id)))
+  return visibleColumnsIn(block.id, block.columns, ex)
+}
+
+/** Same rule, for callers holding a block's id and columns rather than the block
+ *  itself (the dashboard looks blocks up by id; the contents modal carries its own
+ *  block shape). Keeps the exclusion test in one place. */
+export function visibleColumnsIn(blockId: string, columns: readonly Column[], ex: Excluded): Column[] {
+  return columns.filter((c) => !ex.columns.has(columnKey(blockId, c.id)))
 }
 
 /** A row counts as present only when a column the site can see holds a value.
