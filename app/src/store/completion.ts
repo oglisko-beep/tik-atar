@@ -1,6 +1,6 @@
 import type { Block, BlockValue, ChecklistValues, Doc, KvValues, Row, Section } from '../types'
 import type { Excluded } from './inclusion'
-import { visibleBlocks, visibleColumns, visibleSections } from './inclusion'
+import { visibleBlocks, visibleChecklistRows, visibleColumns, visibleSections } from './inclusion'
 
 export interface Completion {
   total: number
@@ -24,9 +24,11 @@ function unit(b: Block, v: BlockValue | undefined, ex?: Excluded): Completion {
     // (a renamed or removed column), matching `rowsWithVisibleData`, which tables and
     // both exporters already use. The data itself is kept — it just stops counting.
     const cols = ex ? visibleColumns(b, ex) : b.columns
+    // Rows the site filtered out of the table are not part of the denominator either.
+    const rows = ex ? visibleChecklistRows(b, ex) : b.rows
     return {
-      total: b.rows.length,
-      filled: b.rows.filter((r) => {
+      total: rows.length,
+      filled: rows.filter((r) => {
         const rv = cv[r.id]
         return !!rv && cols.some((c) => nonEmpty(rv[c.id]))
       }).length,

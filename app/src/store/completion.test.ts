@@ -47,8 +47,8 @@ describe('completion', () => {
       ],
     }
     const values = { ck: { r0: { owner: 'דני' } } }
-    const all = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
-    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#owner']) }
+    const all = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
+    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#owner']), rows: new Set<string>() }
     expect(sectionCompletion(sec, values, all)).toEqual({ total: 1, filled: 1 })
     expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 0 })
   })
@@ -63,7 +63,7 @@ describe('completion', () => {
       ],
     }
     const values = { t: [{ _id: 'r', c0: 'x' }] }
-    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 1 })
   })
 
@@ -78,7 +78,22 @@ describe('completion', () => {
       ],
     }
     const values = { ck: { r0: { status: 'קיים' } } }
-    const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#status']) }
+    const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#status']), rows: new Set<string>() }
     expect(sectionCompletion(sec, values, none)).toEqual({ total: 1, filled: 0 })
+  })
+
+  it('a filtered-out checklist row leaves the denominator', () => {
+    const sec: Section = {
+      id: 'sR', title: 'R', blocks: [
+        { kind: 'checklist', id: 'ck', rowHeader: 'בקרה', columns: [{ id: 'status', label: 'סטטוס', type: 'status' }],
+          rows: [{ id: 'r0', label: 'A' }, { id: 'r1', label: 'B' }] },
+      ],
+    }
+    const values = { ck: { r0: { status: 'קיים' } } }
+    const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
+    const hidden = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set(['ck#r1']) }
+    expect(sectionCompletion(sec, values, none)).toEqual({ total: 2, filled: 1 })
+    // Hiding the unfilled row raises completion to 1/1 rather than leaving it 1/2.
+    expect(sectionCompletion(sec, values, hidden)).toEqual({ total: 1, filled: 1 })
   })
 })

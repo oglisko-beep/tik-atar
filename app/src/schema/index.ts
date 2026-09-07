@@ -43,3 +43,14 @@ export function columnsOf(blockId: string): readonly Column[] {
   }
   return []
 }
+
+/** Rows of a checklist block, by block id. Empty when the id is unknown or the
+ *  block has no fixed rows. Used by the reducer's last-row guard. */
+export function rowsOf(blockId: string): readonly { id: string; label: string }[] {
+  for (const section of doc.sections) {
+    for (const block of section.blocks) {
+      if (block.kind === 'checklist' && block.id === blockId) return block.rows
+    }
+  }
+  return []
+}

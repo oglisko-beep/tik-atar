@@ -1,7 +1,7 @@
 import type { ChecklistValues, Row, SiteData } from '../types'
 import { columnsOf, doc } from '../schema'
 import { overallCompletion, pct } from './completion'
-import { excludedOf, rowsWithVisibleData, visibleColumns, visibleColumnsIn, type Excluded } from './inclusion'
+import { excludedOf, rowKey, rowsWithVisibleData, visibleColumns, visibleColumnsIn, type Excluded } from './inclusion'
 import { parseDate } from './validation'
 
 const COMPLETED_PCT = 90
@@ -121,7 +121,11 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
     const t = Date.parse(site.updatedAt)
     const staleDays = isNaN(t) ? 0 : Math.max(0, Math.floor((now - t) / DAY))
     const cv = (site.values['s5-controls'] as ChecklistValues) || {}
-    const criticalGaps = controls.filter((c) => c.critical && cv[c.rowId]?.status === 'חסר').map((c) => c.label)
+    const ex = excludedOf(site)
+    // A control this site filtered out of its table is not a gap for this site.
+    const criticalGaps = controls
+      .filter((c) => c.critical && !ex.rows.has(rowKey('s5-controls', c.rowId)) && cv[c.rowId]?.status === 'חסר')
+      .map((c) => c.label)
     return {
       id: site.id,
       name: site.meta.name || '—',
@@ -140,10 +144,13 @@ export function buildDashboard(sites: Record<string, SiteData>, now: number): Da
     const statuses: Record<string, string> = {}
     for (const site of list) {
       const cv = (site.values['s5-controls'] as ChecklistValues) || {}
-      statuses[site.id] = cv[c.rowId]?.status ?? ''
+      // Blank for a site that filtered this control out — it has no opinion on it.
+      statuses[site.id] = excludedOf(site).rows.has(rowKey('s5-controls', c.rowId)) ? '' : cv[c.rowId]?.status ?? ''
     }
     return { rowId: c.rowId, label: c.label, critical: c.critical, statuses }
   })
+    // Drop a control no site still shows.
+    .filter((r) => list.some((site) => !excludedOf(site).rows.has(rowKey('s5-controls', r.rowId))))
 
   const inventory = {
     servers: list.reduce((n, s) => n + filledRows(s, 's3-servers'), 0),

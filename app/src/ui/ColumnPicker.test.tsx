@@ -7,7 +7,7 @@ const cols: Column[] = [
   { id: 'c0', label: 'שם', type: 'text' },
   { id: 'c1', label: 'תוקף', type: 'date' },
 ]
-const noneExcluded = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
+const noneExcluded = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
 
 describe('ColumnPicker', () => {
   it('opens the popover and lists every column', () => {
@@ -26,7 +26,7 @@ describe('ColumnPicker', () => {
   })
 
   it('disables the last visible column so it cannot be hidden', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     render(<ColumnPicker blockId="t" allColumns={cols} ex={ex} dispatch={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /עמודות/ }))
     expect(screen.getByLabelText(/^שם/)).toBeDisabled()
@@ -34,7 +34,7 @@ describe('ColumnPicker', () => {
   })
 
   it('shows how many columns are hidden', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     render(<ColumnPicker blockId="t" allColumns={cols} ex={ex} dispatch={vi.fn()} />)
     expect(screen.getByRole('button', { name: /עמודות/ }).textContent).toContain('1')
   })

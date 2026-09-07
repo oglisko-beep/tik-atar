@@ -4,6 +4,7 @@ export interface Excluded {
   sections: Set<string>
   subsections: Set<string>
   columns: Set<string>
+  rows: Set<string>
 }
 
 export function excludedOf(site: SiteData | null | undefined): Excluded {
@@ -11,11 +12,16 @@ export function excludedOf(site: SiteData | null | undefined): Excluded {
     sections: new Set(site?.excluded?.sections ?? []),
     subsections: new Set(site?.excluded?.subsections ?? []),
     columns: new Set(site?.excluded?.columns ?? []),
+    rows: new Set(site?.excluded?.rows ?? []),
   }
 }
 
 /** Key for one column of one block. The only place this format is built. */
 export const columnKey = (blockId: string, colId: string): string => `${blockId}#${colId}`
+
+/** Key for one checklist row. Same shape as columnKey but a separate namespace,
+ *  so a row and a column may share an id without colliding. */
+export const rowKey = (blockId: string, rowId: string): string => `${blockId}#${rowId}`
 
 /** Columns of a table/checklist block that this site has not excluded. */
 export function visibleColumns(block: ColumnarBlock, ex: Excluded): Column[] {
@@ -27,6 +33,14 @@ export function visibleColumns(block: ColumnarBlock, ex: Excluded): Column[] {
  *  block shape). Keeps the exclusion test in one place. */
 export function visibleColumnsIn(blockId: string, columns: readonly Column[], ex: Excluded): Column[] {
   return columns.filter((c) => !ex.columns.has(columnKey(blockId, c.id)))
+}
+
+/** Checklist rows this site has not filtered out of the table. */
+export function visibleChecklistRows(
+  block: Extract<Block, { kind: 'checklist' }>,
+  ex: Excluded,
+): { id: string; label: string }[] {
+  return block.rows.filter((r) => !ex.rows.has(rowKey(block.id, r.id)))
 }
 
 /** A row counts as present only when a column the site can see holds a value.
@@ -62,6 +76,8 @@ export function subsectionsOf(section: Section): { id: string; text: string }[] 
 }
 
 export interface ColumnarBlockRef {
+  /** Fixed rows, for checklists only — tables carry user-entered rows instead. */
+  rows?: readonly { id: string; label: string }[]
   /** Subhead this block sits under; '' for blocks before the first subhead. */
   subId: string
   blockId: string
@@ -78,7 +94,7 @@ export function columnarBlocksOf(section: Section): ColumnarBlockRef[] {
   for (const b of section.blocks) {
     if (b.kind === 'subhead') { subId = b.id ?? ''; continue }
     if (b.kind !== 'table' && b.kind !== 'checklist') continue
-    out.push({ subId, blockId: b.id, label: b.kind === 'table' ? 'טבלה' : b.rowHeader || 'צ׳קליסט', columns: b.columns })
+    out.push({ subId, blockId: b.id, label: b.kind === 'table' ? 'טבלה' : b.rowHeader || 'צ׳קליסט', columns: b.columns, rows: b.kind === 'checklist' ? b.rows : undefined })
   }
   // Number only the kinds that repeat within the same subhead.
   const total = new Map<string, number>()

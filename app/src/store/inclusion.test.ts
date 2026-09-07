@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Block, Doc, Row, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, visibleColumnsIn, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, visibleColumnsIn, visibleChecklistRows, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -27,7 +27,7 @@ const checklistBlock = {
     { id: 'c1', label: 'סטטוס', type: 'status' },
     { id: 'c2', label: 'אחראי', type: 'text' },
   ],
-  rows: [{ id: 'r0', label: 'A' }],
+  rows: [{ id: 'r0', label: 'A' }, { id: 'r1', label: 'B' }],
 } as Extract<Block, { kind: 'checklist' }>
 
 describe('inclusion', () => {
@@ -42,11 +42,11 @@ describe('inclusion', () => {
     expect(ex.subsections.has('s1#0')).toBe(true)
   })
   it('visibleSections drops excluded sections', () => {
-    const ex = { sections: new Set(['sY']), subsections: new Set<string>(), columns: new Set<string>() }
+    const ex = { sections: new Set(['sY']), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
     expect(visibleSections(doc, ex).map((s) => s.id)).toEqual(['sX'])
   })
   it('visibleBlocks drops an excluded subhead group, keeps the intro and other groups', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set(['sX#0']), columns: new Set<string>() }
+    const ex = { sections: new Set<string>(), subsections: new Set(['sX#0']), columns: new Set<string>(), rows: new Set<string>() }
     const ids = visibleBlocks(section, ex).map((b) => ('id' in b ? b.id : b.kind))
     expect(ids).toEqual(['intro', 'sX#1', 'b1'])
   })
@@ -72,24 +72,24 @@ describe('inclusion', () => {
   })
 
   it('visibleColumns returns every column when nothing is excluded', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
     expect(visibleColumns(tableBlock, ex).map((c) => c.id)).toEqual(['c0', 'c1'])
   })
 
   it('visibleColumns drops an excluded column', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     expect(visibleColumns(tableBlock, ex).map((c) => c.id)).toEqual(['c0'])
   })
 
   it('visibleColumnsIn applies the same rule for callers holding an id, not a block', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     expect(visibleColumnsIn('t', tableBlock.columns, ex).map((c) => c.id)).toEqual(['c0'])
     // The key is namespaced, so the same columns under another block id are untouched.
     expect(visibleColumnsIn('other', tableBlock.columns, ex).map((c) => c.id)).toEqual(['c0', 'c1'])
   })
 
   it('column keys are namespaced per block — same colId in another block is unaffected', () => {
-    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']) }
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['t#c1']), rows: new Set<string>() }
     expect(visibleColumns(checklistBlock, ex).map((c) => c.id)).toEqual(['c1', 'c2'])
   })
 
@@ -104,8 +104,8 @@ describe('inclusion', () => {
       ],
     }
     expect(columnarBlocksOf(sec)).toEqual([
-      { subId: 'sZ#0', blockId: 'tA', label: 'טבלה', columns: [{ id: 'c0', label: 'A', type: 'text' }] },
-      { subId: 'sZ#1', blockId: 'ckB', label: 'ב', columns: [{ id: 'c1', label: 'B', type: 'text' }] },
+      { subId: 'sZ#0', blockId: 'tA', label: 'טבלה', columns: [{ id: 'c0', label: 'A', type: 'text' }], rows: undefined },
+      { subId: 'sZ#1', blockId: 'ckB', label: 'ב', columns: [{ id: 'c1', label: 'B', type: 'text' }], rows: [] },
     ])
   })
 
@@ -154,5 +154,21 @@ describe('inclusion', () => {
     const visibleOnly = [tableBlock.columns[0]] // c0 only — c1 treated as excluded
     const rows: Row[] = [{ _id: 'r1', c1: '10.0.0.1' }]
     expect(rowsWithVisibleData(rows, visibleOnly)).toEqual([])
+  })
+  it('visibleChecklistRows drops a row the site filtered out', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set(['ck#r1']) }
+    expect(visibleChecklistRows(checklistBlock, ex).map((r) => r.id)).toEqual(['r0'])
+  })
+
+  it('visibleChecklistRows keeps every row when nothing is filtered', () => {
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
+    expect(visibleChecklistRows(checklistBlock, ex).map((r) => r.id)).toEqual(['r0', 'r1'])
+  })
+
+  it('row keys are namespaced per block, and share no namespace with columns', () => {
+    // 'ck#c1' is an excluded COLUMN key; it must not hide the row that happens to share an id.
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#c1']), rows: new Set(['other#r1']) }
+    expect(visibleChecklistRows(checklistBlock, ex).map((r) => r.id)).toEqual(['r0', 'r1'])
+    expect(visibleColumns(checklistBlock, ex).map((c) => c.id)).toEqual(['c2'])
   })
 })

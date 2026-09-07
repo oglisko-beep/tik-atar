@@ -30,7 +30,7 @@ npm run preview    # תצוגה מקדימה של ה-build
 
 ## בדיקות וטיפוסים
 ```powershell
-npm run test       # Vitest (110 בדיקות)
+npm run test       # Vitest (125 בדיקות)
 npx tsc --noEmit   # בדיקת טיפוסים
 ```
 

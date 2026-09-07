@@ -1,13 +1,14 @@
 import type { Dispatch } from 'react'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 import type { Action } from '../store/StoreContext'
-import { visibleColumns, type Excluded } from '../store/inclusion'
+import { visibleChecklistRows, visibleColumns, type Excluded } from '../store/inclusion'
 import { KvBlock } from './KvBlock'
 import { TableBlock } from './TableBlock'
 import { ChecklistBlock } from './ChecklistBlock'
 import { ImageBlock } from './ImageBlock'
 import { BulletsBlock, BoxBlock, CalloutBlock } from './StaticBlocks'
 import { ColumnPicker } from '../ui/ColumnPicker'
+import { RowPicker } from '../ui/RowPicker'
 
 export function BlockRenderer({
   block,
@@ -66,9 +67,17 @@ export function BlockRenderer({
           <ChecklistBlock
             block={block}
             cols={visibleColumns(block, ex)}
+            rows={visibleChecklistRows(block, ex)}
             value={values[block.id] as ChecklistValues | undefined}
             onChange={(rowId, colId, value) =>
               dispatch({ type: 'SET_CHECKLIST', blockId: block.id, rowId, colId, value })
+            }
+            // Full lists on purpose — the pickers must show hidden items to restore them.
+            pickerSlot={
+              <>
+                <RowPicker blockId={block.id} allRows={block.rows} ex={ex} dispatch={dispatch} />
+                <ColumnPicker blockId={block.id} allColumns={block.columns} ex={ex} dispatch={dispatch} />
+              </>
             }
           />
         </div>

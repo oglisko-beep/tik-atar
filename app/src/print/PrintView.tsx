@@ -1,6 +1,6 @@
 import { doc } from '../schema'
 import { useActiveSite } from '../store/StoreContext'
-import { excludedOf, visibleSections, visibleBlocks, visibleColumns, rowsWithVisibleData, type Excluded } from '../store/inclusion'
+import { excludedOf, visibleSections, visibleBlocks, visibleChecklistRows, visibleColumns, rowsWithVisibleData, type Excluded } from '../store/inclusion'
 import { isImageItem } from '../engine/imageUtils'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 
@@ -60,7 +60,7 @@ export function PrintBlock({ block, values, ex }: { block: Block; values: Record
             </tr>
           </thead>
           <tbody>
-            {block.rows.map((r) => (
+            {visibleChecklistRows(block, ex).map((r) => (
               <tr key={r.id}>
                 <td>{r.label}</td>
                 {cols.map((c) => (

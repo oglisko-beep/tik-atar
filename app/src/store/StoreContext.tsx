@@ -6,8 +6,8 @@ import type { AppState, ImageItem, Row, SiteData } from '../types'
 import { loadState, saveState, debounce, loadMode, saveMode, loadSharedCache, saveSharedCache } from './storage'
 import { newSite, cloneSite } from './siteData'
 import { isRemoteConfigured } from '../remote/config'
-import { columnsOf } from '../schema'
-import { columnKey } from './inclusion'
+import { columnsOf, rowsOf } from '../schema'
+import { columnKey, rowKey } from './inclusion'
 
 // When SharePoint is configured the app is a single shared system (no local mode).
 const SHARED_ONLY = isRemoteConfigured()
@@ -39,7 +39,8 @@ export type Action =
   | { type: 'TOGGLE_SECTION'; sectionId: string }
   | { type: 'TOGGLE_SUBSECTION'; subId: string }
   | { type: 'TOGGLE_COLUMN'; key: string }
-  | { type: 'SET_INCLUSION'; sections: string[]; subsections: string[]; columns: string[] }
+  | { type: 'TOGGLE_ROW'; key: string }
+  | { type: 'SET_INCLUSION'; sections: string[]; subsections: string[]; columns: string[]; rows: string[] }
 
 const now = () => new Date().toISOString()
 const defaultUi = () => ({ theme: 'light' as const, showExamples: true })
@@ -66,7 +67,7 @@ function touchActive(state: AppState, mutate: (site: SiteData) => SiteData): App
 }
 
 const toggleId = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id])
-const emptyExcluded = () => ({ sections: [] as string[], subsections: [] as string[], columns: [] as string[] })
+const emptyExcluded = () => ({ sections: [] as string[], subsections: [] as string[], columns: [] as string[], rows: [] as string[] })
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -151,10 +152,25 @@ export function reducer(state: AppState, action: Action): AppState {
         if (all.length && hidden >= all.length - 1) return site
         return { ...site, excluded: { ...ex, columns: [...columns, action.key] } }
       })
+    case 'TOGGLE_ROW':
+      return touchActive(state, (site) => {
+        const ex = { ...emptyExcluded(), ...site.excluded }
+        const rows = ex.rows
+        // Removing an exclusion is always allowed.
+        if (rows.includes(action.key)) {
+          return { ...site, excluded: { ...ex, rows: rows.filter((x) => x !== action.key) } }
+        }
+        // Adding one is refused when it would hide the checklist's last visible row.
+        const blockId = action.key.slice(0, action.key.lastIndexOf('#'))
+        const all = rowsOf(blockId)
+        const hidden = all.filter((r) => rows.includes(rowKey(blockId, r.id))).length
+        if (all.length && hidden >= all.length - 1) return site
+        return { ...site, excluded: { ...ex, rows: [...rows, action.key] } }
+      })
     case 'SET_INCLUSION':
       return touchActive(state, (site) => ({
         ...site,
-        excluded: { sections: action.sections, subsections: action.subsections, columns: action.columns },
+        excluded: { sections: action.sections, subsections: action.subsections, columns: action.columns, rows: action.rows },
       }))
     default:
       return state

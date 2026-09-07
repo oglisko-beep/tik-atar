@@ -208,3 +208,5 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .colpick-row input:disabled { cursor: not-allowed; }
 .colpick-row input:disabled + span { opacity: 0.55; }
 .colpick-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+
+.cm-rowitem .cm-nm { font-style: italic; }

@@ -12,8 +12,8 @@ const table = {
 } as Extract<Block, { kind: 'table' }>
 
 const values = { 's7-suppliers': [{ _id: 'r', c0: 'ספק א', c5: '12/2026' }] }
-const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>() }
-const hideValidity = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['s7-suppliers#c5']) }
+const none = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set<string>() }
+const hideValidity = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['s7-suppliers#c5']), rows: new Set<string>() }
 
 describe('PrintBlock', () => {
   it('prints every column when the site excludes nothing', () => {

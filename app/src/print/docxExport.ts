@@ -5,7 +5,7 @@ import {
 } from 'docx'
 import type { Block, ChecklistValues, ImageItem, KvValues, Row, SiteData } from '../types'
 import { doc as schema } from '../schema'
-import { excludedOf, visibleSections, visibleBlocks, visibleColumns, rowsWithVisibleData, type Excluded } from '../store/inclusion'
+import { excludedOf, visibleSections, visibleBlocks, visibleChecklistRows, visibleColumns, rowsWithVisibleData, type Excluded } from '../store/inclusion'
 import { isImageItem } from '../engine/imageUtils'
 
 interface ProcessedImage { data: Uint8Array; type: 'png' | 'jpg'; width: number; height: number }
@@ -184,7 +184,7 @@ function blockToDocx(block: Block, values: Record<string, unknown>, imageMap: Im
       const v = (values[block.id] as ChecklistValues) || {}
       const cols = visibleColumns(block, ex)
       const headers = [block.rowHeader, ...cols.map((c) => c.label)]
-      const rows = block.rows.map((r) => [r.label, ...cols.map((c) => v[r.id]?.[c.id] || '')])
+      const rows = visibleChecklistRows(block, ex).map((r) => [r.label, ...cols.map((c) => v[r.id]?.[c.id] || '')])
       return [dataTable(headers, rows), spacer(80)]
     }
     case 'table': {

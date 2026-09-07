@@ -45,4 +45,15 @@ describe('docxExport', () => {
     expect(xml).not.toContain('12/2026')
     expect(xml).not.toContain('תוקף')
   })
+
+  it('omits a filtered-out checklist row from the exported Word document', async () => {
+    const site = newSite('עם שורה מוסתרת', () => 's5')
+    site.values['s6-resilience'] = { r0: { by: 'ספק חיצוני' }, r4: { by: 'צוות פנימי' } }
+    site.excluded = { sections: [], subsections: [], columns: [], rows: ['s6-resilience#r4'] }
+    const buf = await Packer.toBuffer(buildDocxDocument(site, null))
+    const xml = await (await JSZip.loadAsync(buf)).file('word/document.xml')!.async('text')
+    expect(xml).toContain('ספק חיצוני')
+    expect(xml).not.toContain('צוות פנימי')
+    expect(xml).not.toContain('סקר ארכיטקטורת הגנה')
+  })
 })

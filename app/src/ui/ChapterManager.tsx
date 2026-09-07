@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { doc } from '../schema'
 import { useStore, useActiveSite } from '../store/StoreContext'
-import { excludedOf, subsectionsOf, columnarBlocksOf, columnKey, visibleColumnsIn } from '../store/inclusion'
+import { excludedOf, subsectionsOf, columnarBlocksOf, columnKey, rowKey, visibleColumnsIn } from '../store/inclusion'
 import { IconX, IconChevronDown, IconCheck } from './icons'
 
 export function ChapterManager({ onClose }: { onClose: () => void }) {
@@ -25,8 +25,8 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
           <button className="icon-btn" onClick={onClose} aria-label="סגור"><IconX /></button>
         </div>
         <div className="cm-tools">
-          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: [], subsections: [], columns: [] })}>בחר הכול</button>
-          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: allSecIds, subsections: allSubIds, columns: [] })}>נקה הכול</button>
+          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: [], subsections: [], columns: [], rows: [] })}>בחר הכול</button>
+          <button className="cm-link" onClick={() => dispatch({ type: 'SET_INCLUSION', sections: allSecIds, subsections: allSubIds, columns: [], rows: [] })}>נקה הכול</button>
         </div>
         <div className="cm-list">
           {doc.sections.map((s) => {
@@ -60,13 +60,14 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
                         </button>
                         <span className="cm-nm">{sub.text}</span>
                         {blocks.length > 0 && subOn && (
-                          <button className={'cm-exp' + (open[sub.id] ? ' open' : '')} aria-label="הצג עמודות" onClick={() => setOpen((o) => ({ ...o, [sub.id]: !o[sub.id] }))}>
+                          <button className={'cm-exp' + (open[sub.id] ? ' open' : '')} aria-label="הצג עמודות ושורות" onClick={() => setOpen((o) => ({ ...o, [sub.id]: !o[sub.id] }))}>
                             <IconChevronDown width={15} height={15} />
                           </button>
                         )}
                       </div>
                       {open[sub.id] && subOn && blocks.map((b) => {
                         const visible = visibleColumnsIn(b.blockId, b.columns, ex)
+                        const visibleRows = (b.rows ?? []).filter((r) => !ex.rows.has(rowKey(b.blockId, r.id)))
                         return (
                           <div key={b.blockId}>
                             <div className="cm-row cm-blk"><span className="cm-nm">{b.label}</span></div>
@@ -86,6 +87,25 @@ export function ChapterManager({ onClose }: { onClose: () => void }) {
                                     {on && <IconCheck width={12} height={12} />}
                                   </button>
                                   <span className="cm-nm">{c.label}</span>
+                                </div>
+                              )
+                            })}
+                            {(b.rows ?? []).map((r) => {
+                              const key = rowKey(b.blockId, r.id)
+                              const on = !ex.rows.has(key)
+                              const locked = on && visibleRows.length <= 1
+                              return (
+                                <div className="cm-row cm-col cm-rowitem" key={'r-' + r.id}>
+                                  <button
+                                    className={'cm-check' + (on ? ' on' : '') + (locked ? ' locked' : '')}
+                                    aria-pressed={on}
+                                    aria-label={locked ? `${r.label} — לא ניתן להסתיר את השורה האחרונה הגלויה` : r.label}
+                                    disabled={locked}
+                                    onClick={() => dispatch({ type: 'TOGGLE_ROW', key })}
+                                  >
+                                    {on && <IconCheck width={12} height={12} />}
+                                  </button>
+                                  <span className="cm-nm">{r.label}</span>
                                 </div>
                               )
                             })}
