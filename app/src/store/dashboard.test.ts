@@ -142,4 +142,11 @@ describe('buildDashboard', () => {
     expect(d.expiries[0].name).not.toBe('01/07/2026')
     expect(d.expiries[0].name).toBe('ספק כלשהו')
   })
+
+  it('does not count an inventory row the site has hidden', () => {
+    const vals: Record<string, Row[]> = { 's3-servers': [{ _id: 'a', c0: 'srv1' }, { _id: 'b', c0: 'srv2' }] }
+    expect(buildDashboard({ a: site('a', { values: vals }) }, NOW).inventory.servers).toBe(2)
+    const b = { ...site('b', { values: vals }), excluded: { sections: [], subsections: [], columns: [], rows: ['s3-servers#b'] } }
+    expect(buildDashboard({ b }, NOW).inventory.servers).toBe(1)
+  })
 })

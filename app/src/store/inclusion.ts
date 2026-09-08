@@ -43,6 +43,13 @@ export function visibleChecklistRows(
   return block.rows.filter((r) => !ex.rows.has(rowKey(block.id, r.id)))
 }
 
+/** Table rows this site has not hidden. Unlike checklist rows, these are the
+ *  user's own entries, identified by the `_id` stored with them. A row with no
+ *  `_id` (never persisted) is always visible. */
+export function visibleTableRows(blockId: string, rows: readonly Row[], ex: Excluded): Row[] {
+  return rows.filter((r) => !r._id || !ex.rows.has(rowKey(blockId, r._id)))
+}
+
 /** A row counts as present only when a column the site can see holds a value.
  *  Shared by the editor's row count and both exporters so the rule cannot drift. */
 export function rowsWithVisibleData(rows: readonly Row[], cols: readonly Column[]): Row[] {

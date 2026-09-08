@@ -1,7 +1,7 @@
 import type { ChecklistValues, Row, SiteData } from '../types'
 import { columnsOf, doc } from '../schema'
 import { overallCompletion, pct } from './completion'
-import { excludedOf, rowKey, rowsWithVisibleData, visibleColumns, visibleColumnsIn, type Excluded } from './inclusion'
+import { excludedOf, rowKey, rowsWithVisibleData, visibleColumns, visibleColumnsIn, visibleTableRows, type Excluded } from './inclusion'
 import { parseDate } from './validation'
 
 const COMPLETED_PCT = 90
@@ -95,7 +95,8 @@ function securityControls(): { rowId: string; label: string; critical: boolean }
 function filledRows(site: SiteData, blockId: string): number {
   const ex = excludedOf(site)
   const cols = visibleColumnsIn(blockId, columnsOf(blockId), ex)
-  return rowsWithVisibleData((site.values[blockId] as Row[]) || [], cols).length
+  const rows = visibleTableRows(blockId, (site.values[blockId] as Row[]) || [], ex)
+  return rowsWithVisibleData(rows, cols).length
 }
 
 /** Human-friendly "time since update" in Hebrew, with dual forms. */

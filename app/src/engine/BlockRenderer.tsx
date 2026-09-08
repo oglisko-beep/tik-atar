@@ -1,7 +1,7 @@
 import type { Dispatch } from 'react'
 import type { Block, BlockValue, ChecklistValues, ImageItem, KvValues, Row } from '../types'
 import type { Action } from '../store/StoreContext'
-import { visibleChecklistRows, visibleColumns, type Excluded } from '../store/inclusion'
+import { rowKey, visibleChecklistRows, visibleColumns, type Excluded } from '../store/inclusion'
 import { KvBlock } from './KvBlock'
 import { TableBlock } from './TableBlock'
 import { ChecklistBlock } from './ChecklistBlock'
@@ -91,6 +91,8 @@ export function BlockRenderer({
             value={values[block.id] as Row[] | undefined}
             showExamples={showExamples}
             onChange={(rows) => dispatch({ type: 'SET_TABLE', blockId: block.id, rows })}
+            isRowHidden={(rowId) => ex.rows.has(rowKey(block.id, rowId))}
+            onToggleRow={(rowId) => dispatch({ type: 'TOGGLE_ROW', key: rowKey(block.id, rowId) })}
             // Full column set on purpose — the picker must list hidden columns to restore them.
             pickerSlot={<ColumnPicker blockId={block.id} allColumns={block.columns} ex={ex} dispatch={dispatch} />}
           />

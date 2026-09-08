@@ -43,6 +43,7 @@ export const IconDashboard = (p: P) => (<svg {...base(p)}><rect x="3" y="3" widt
 export const IconLogout = (p: P) => (<svg {...base(p)}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>)
 export const IconColumns = (p: P) => (<svg {...base(p)}><rect x="3" y="4" width="6" height="16" rx="1" /><rect x="15" y="4" width="6" height="16" rx="1" /></svg>)
 export const IconRows = (p: P) => (<svg {...base(p)}><rect x="3" y="4" width="18" height="6" rx="1" /><rect x="3" y="14" width="18" height="6" rx="1" /></svg>)
+export const IconEyeOff = (p: P) => (<svg {...base(p)}><path d="M10.6 5.1A9 9 0 0 1 12 5c5.5 0 9 6 9 6a15 15 0 0 1-2.4 3M6.6 6.6A15 15 0 0 0 3 11s3.5 6 9 6a9 9 0 0 0 3.9-.9" /><path d="m3 3 18 18" /></svg>)
 export const IconMicrosoft = (p: P) => (
   <svg width={18} height={18} viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" {...p}>
     <rect x="1" y="1" width="9" height="9" fill="#f25022" />

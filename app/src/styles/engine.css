@@ -210,3 +210,6 @@ select.status-native option { color: var(--text); background: var(--surface); fo
 .colpick-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
 
 .cm-rowitem .cm-nm { font-style: italic; }
+
+.data tr.row-hidden td { opacity: 0.45; }
+.data tr.row-hidden td .row-actions { opacity: 1; }

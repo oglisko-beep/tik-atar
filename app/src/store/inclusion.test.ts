@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Block, Doc, Row, Section } from '../types'
-import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, visibleColumnsIn, visibleChecklistRows, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
+import { excludedOf, visibleSections, visibleBlocks, subsectionsOf, visibleColumns, visibleColumnsIn, visibleChecklistRows, visibleTableRows, columnarBlocksOf, rowsWithVisibleData } from './inclusion'
 
 const section: Section = {
   id: 'sX', title: 'X', blocks: [
@@ -170,5 +170,23 @@ describe('inclusion', () => {
     const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set(['ck#c1']), rows: new Set(['other#r1']) }
     expect(visibleChecklistRows(checklistBlock, ex).map((r) => r.id)).toEqual(['r0', 'r1'])
     expect(visibleColumns(checklistBlock, ex).map((c) => c.id)).toEqual(['c2'])
+  })
+
+  it('visibleTableRows hides a row by its stored _id', () => {
+    const rows: Row[] = [{ _id: 'a', c0: 'שרת א' }, { _id: 'b', c0: 'שרת ב' }]
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set(['t#b']) }
+    expect(visibleTableRows('t', rows, ex).map((r) => r._id)).toEqual(['a'])
+  })
+
+  it('visibleTableRows keeps a row that has no _id yet', () => {
+    const rows: Row[] = [{ c0: 'טרם נשמר' }]
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set(['t#b']) }
+    expect(visibleTableRows('t', rows, ex)).toEqual(rows)
+  })
+
+  it('table row keys are namespaced per block', () => {
+    const rows: Row[] = [{ _id: 'b', c0: 'x' }]
+    const ex = { sections: new Set<string>(), subsections: new Set<string>(), columns: new Set<string>(), rows: new Set(['t#b']) }
+    expect(visibleTableRows('other', rows, ex)).toEqual(rows)
   })
 })
