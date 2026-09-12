@@ -1,7 +1,7 @@
 import type { SiteData } from '../types'
 import { getToken } from './auth'
 import { remoteConfig } from './config'
-import { resolveSiteId, resolveDriveId, listFiles, readFile, writeFile } from './graph'
+import { resolveSiteId, resolveDriveId, listFiles, readFile, writeFile, deleteFile } from './graph'
 
 let ids: { siteId: string; driveId: string } | null = null
 
@@ -36,4 +36,10 @@ export async function saveRemoteSite(site: SiteData, eTag: string): Promise<{ eT
   const t = await getToken()
   const { siteId, driveId } = await getIds(t)
   return writeFile(t, siteId, driveId, fileNameFor(site), site, eTag)
+}
+
+export async function deleteRemoteSite(site: SiteData): Promise<void> {
+  const t = await getToken()
+  const { siteId, driveId } = await getIds(t)
+  await deleteFile(t, siteId, driveId, fileNameFor(site))
 }

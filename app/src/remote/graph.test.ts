@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { resolveSiteId, resolveDriveId, listFiles, readFile, writeFile } from './graph'
+import { resolveSiteId, resolveDriveId, listFiles, readFile, writeFile, deleteFile } from './graph'
 
 const ok = (body: any, headers: Record<string, string> = {}) =>
   ({ ok: true, status: 200, json: async () => body, headers: { get: (k: string) => headers[k] ?? null } }) as any
@@ -36,5 +36,22 @@ describe('graph', () => {
     expect(f.mock.calls[0][1].headers['If-Match']).toBe('E9')
     await expect(writeFile('t', 'S', 'D', 'a.json', {}, 'E9', vi.fn().mockResolvedValue(status(412)))).rejects.toThrow('etag-conflict')
     await expect(writeFile('t', 'S', 'D', 'a.json', {}, '', vi.fn().mockResolvedValue(status(403)))).rejects.toThrow('forbidden')
+  })
+
+  it('deletes a file by path', async () => {
+    const f = vi.fn().mockResolvedValue(status(204))
+    await deleteFile('t', 'S', 'D', 'a.json', f)
+    expect(f.mock.calls[0][0]).toContain('/root:/a.json')
+    expect(f.mock.calls[0][1].method).toBe('DELETE')
+  })
+
+  it('treats a missing file as already deleted', async () => {
+    const f = vi.fn().mockResolvedValue(status(404))
+    await expect(deleteFile('t', 'S', 'D', 'gone.json', f)).resolves.toBeUndefined()
+  })
+
+  it('reports a forbidden delete so the app can lock to view-only', async () => {
+    const f = vi.fn().mockResolvedValue(status(403))
+    await expect(deleteFile('t', 'S', 'D', 'a.json', f)).rejects.toThrow('forbidden')
   })
 })

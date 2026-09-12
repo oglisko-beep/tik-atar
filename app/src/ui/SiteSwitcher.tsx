@@ -4,7 +4,7 @@ import { useClickOutside } from './useClickOutside'
 import { IconBuilding, IconChevronDown, IconCheck, IconFolderPlus, IconCopy, IconPencil, IconTrash } from './icons'
 
 export function SiteSwitcher() {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, deleteSite } = useStore()
   const site = useActiveSite()
   const [open, setOpen] = useState(false)
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false))
@@ -76,9 +76,18 @@ export function SiteSwitcher() {
             className="menu-item danger"
             onClick={() => {
               if (!site) return
-              if (window.confirm(`למחוק את "${site.meta.name}"? פעולה זו אינה הפיכה.`))
-                dispatch({ type: 'DELETE_SITE', id: site.id })
+              if (!window.confirm(`למחוק את "${site.meta.name}"? התיק יימחק גם מ-SharePoint (ניתן לשחזור מסל המיחזור).`)) return
               setOpen(false)
+              void deleteSite(site.id).then((r) => {
+                if (r.ok) return
+                // The site is still here on purpose — saying otherwise would repeat the
+                // original bug, where a delete that never reached SharePoint looked done.
+                const why =
+                  r.reason === 'readonly' ? 'אין לך הרשאת מחיקה בספריית TikAtarData.'
+                  : r.reason === 'signedout' ? 'ההתחברות פגה — התחבר מחדש ונסה שוב.'
+                  : 'המחיקה לא הגיעה ל-SharePoint (בעיית רשת). התיק נשאר כפי שהיה.'
+                window.alert(`האתר לא נמחק. ${why}`)
+              })
             }}
           >
             <IconTrash /> מחק אתר

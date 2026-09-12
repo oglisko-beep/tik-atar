@@ -57,3 +57,22 @@ export async function writeFile(
   if (!r.ok) throw new Error(`write ${r.status}`)
   return { eTag: (await r.json()).eTag || '' }
 }
+
+/** Delete one site's file. SharePoint keeps it in the recycle bin, so this stays
+ *  recoverable for the tenant's retention window. A file that is already gone
+ *  counts as success — the caller's intent is satisfied either way. */
+export async function deleteFile(
+  token: string,
+  siteId: string,
+  driveId: string,
+  name: string,
+  f: F = fetch,
+): Promise<void> {
+  const r = await f(`${GRAPH}/sites/${siteId}/drives/${driveId}/root:/${enc(name)}`, {
+    method: 'DELETE',
+    headers: auth(token),
+  })
+  if (r.status === 404) return
+  if (r.status === 403) throw new Error('forbidden')
+  if (!r.ok) throw new Error(`delete ${r.status}`)
+}

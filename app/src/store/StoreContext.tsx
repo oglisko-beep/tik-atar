@@ -188,6 +188,10 @@ interface StoreValue {
   signIn: () => void
   signOut: () => void
   refreshNow: () => void
+  /** Deletes the site locally and, in shared mode, its SharePoint file. Resolves
+   *  { ok: false } with a reason when the remote delete was refused or failed — the
+   *  site then stays put rather than looking deleted until the next load. */
+  deleteSite: (id: string) => Promise<{ ok: boolean; reason?: string }>
 }
 const StoreCtx = createContext<StoreValue | null>(null)
 
@@ -226,6 +230,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } finally {
       editing.current = false
     }
+  }
+
+  /** Delete a site everywhere. In shared mode the SharePoint file must go first:
+   *  if it survives, the next full load would simply bring the site back — which is
+   *  exactly the bug this replaces. A refused or failed delete leaves the site alone
+   *  and reports why, rather than pretending locally that it is gone. */
+  async function deleteSite(id: string): Promise<{ ok: boolean; reason?: string }> {
+    const site = state.sites[id]
+    if (!site) return { ok: true }
+    if (mode === 'shared') {
+      try {
+        setRemoteStatus('saving')
+        const sp = await import('../remote/sharepointStore')
+        await sp.deleteRemoteSite(site)
+        delete eTags.current[sp.fileNameFor(site)]
+        setRemoteStatus('synced')
+      } catch (e: any) {
+        const m = String(e?.message)
+        if (m === 'forbidden') { setReadOnly(true); setRemoteStatus('readonly'); return { ok: false, reason: 'readonly' } }
+        if (m === 'redirecting' || m === 'no-account') { setRemoteStatus('signedout'); return { ok: false, reason: 'signedout' } }
+        setRemoteStatus('offline')
+        return { ok: false, reason: 'offline' }
+      }
+    }
+    dispatch({ type: 'DELETE_SITE', id })
+    return { ok: true }
   }
 
   async function loadAllRemote() {
@@ -365,7 +395,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const refreshNow = () => { if (mode === 'shared') void reloadActive() }
 
   const value = useMemo(
-    () => ({ state, dispatch, saving, mode, remoteStatus, readOnly, setMode, signIn, signOut, refreshNow }),
+    () => ({ state, dispatch, saving, mode, remoteStatus, readOnly, setMode, signIn, signOut, refreshNow, deleteSite }),
+    // deleteSite closes over state/mode, so it is rebuilt with them.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [state, saving, mode, remoteStatus, readOnly],
   )
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
